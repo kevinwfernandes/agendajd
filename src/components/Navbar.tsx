@@ -12,16 +12,16 @@ export default function Navbar() {
             </div>
             <div className="hidden md:block ml-10">
               <div className="flex items-center space-x-4">
-                <Link href="/" className="nav-link">
+                <Link href="/" className="text-jd-light hover:text-jd-cyan transition-colors">
                   Início
                 </Link>
-                <Link href="/eventos" className="nav-link">
+                <Link href="/eventos" className="text-jd-light hover:text-jd-cyan transition-colors">
                   Eventos
                 </Link>
-                <Link href="/recados" className="nav-link">
+                <Link href="/recados" className="text-jd-light hover:text-jd-cyan transition-colors">
                   Recados
                 </Link>
-                <Link href="/calendario" className="nav-link">
+                <Link href="/calendario" className="text-jd-light hover:text-jd-cyan transition-colors">
                   Calendário
                 </Link>
               </div>
@@ -29,7 +29,7 @@ export default function Navbar() {
           </div>
           <div className="hidden md:block">
             <div className="flex items-center">
-              <button type="button" className="btn-accent">
+              <button type="button" className="bg-jd-accent text-jd-primary hover:bg-jd-accent-dark rounded px-4 py-2 shadow-jd">
                 Entrar
               </button>
             </div>
@@ -64,16 +64,16 @@ export default function Navbar() {
       {/* Menu mobile */}
       <div className="md:hidden hidden" id="mobile-menu">
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <Link href="/" className="nav-link block px-3 py-2">
+          <Link href="/" className="text-jd-light hover:text-jd-cyan transition-colors block px-3 py-2">
             Início
           </Link>
-          <Link href="/eventos" className="nav-link block px-3 py-2">
+          <Link href="/eventos" className="text-jd-light hover:text-jd-cyan transition-colors block px-3 py-2">
             Eventos
           </Link>
-          <Link href="/recados" className="nav-link block px-3 py-2">
+          <Link href="/recados" className="text-jd-light hover:text-jd-cyan transition-colors block px-3 py-2">
             Recados
           </Link>
-          <Link href="/calendario" className="nav-link block px-3 py-2">
+          <Link href="/calendario" className="text-jd-light hover:text-jd-cyan transition-colors block px-3 py-2">
             Calendário
           </Link>
         </div>
