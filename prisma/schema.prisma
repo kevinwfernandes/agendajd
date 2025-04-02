@@ -10,4 +10,162 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Aqui você pode adicionar seus modelos 
+// Definição de enums
+enum TipoUsuario {
+  MACOM_ADMIN_GERAL
+  ADMIN_DM
+  ADMIN_FDJ
+  ADMIN_FRATERNA
+  MACOM
+  MEMBRO_DM
+  MEMBRO_FDJ
+  MEMBRO_FRATERNA
+}
+
+// Modelos de dados
+model Classe {
+  id          Int      @id @default(autoincrement())
+  nome        String   @unique
+  descricao   String?
+
+  // Relações
+  usuarios    Usuario[]
+  eventos     Evento[]
+  recados     Recado[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Usuario {
+  id             Int            @id @default(autoincrement())
+  nome           String
+  email          String         @unique
+  senha          String
+  tipoUsuario    TipoUsuario
+  dataNascimento DateTime?
+  telefone       String?
+  foto           String?
+  
+  // Relações
+  classe         Classe?        @relation(fields: [classeId], references: [id])
+  classeId       Int?
+  
+  eventosAutor   Evento[]       @relation("EventoAutor")
+  recados        Recado[]
+  notificacoes   Notificacao[]
+  aniversarios   Aniversario[]
+  usuarioEventos UsuarioEvento[]
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  
+  @@index([classeId])
+  @@index([tipoUsuario])
+}
+
+model Evento {
+  id             Int             @id @default(autoincrement())
+  titulo         String
+  descricao      String
+  data           DateTime
+  publico        Boolean         @default(false)
+  sincGCalendar  Boolean         @default(false)
+  
+  // Relações
+  classe         Classe?         @relation(fields: [classeId], references: [id])
+  classeId       Int?
+  
+  autor          Usuario         @relation("EventoAutor", fields: [autorId], references: [id])
+  autorId        Int
+  
+  notificacoes   Notificacao[]
+  usuarioEventos UsuarioEvento[]
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  
+  @@index([data])
+  @@index([classeId])
+  @@index([publico])
+}
+
+model Recado {
+  id           Int           @id @default(autoincrement())
+  texto        String
+  data         DateTime      @default(now())
+  global       Boolean       @default(false)
+  
+  // Relações
+  classe       Classe?       @relation(fields: [classeId], references: [id])
+  classeId     Int?
+  
+  autor        Usuario       @relation(fields: [autorId], references: [id])
+  autorId      Int
+  
+  notificacoes Notificacao[]
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  @@index([data])
+  @@index([classeId])
+  @@index([global])
+}
+
+model Notificacao {
+  id        Int       @id @default(autoincrement())
+  titulo    String
+  mensagem  String
+  data      DateTime  @default(now())
+  lida      Boolean   @default(false)
+  
+  // Relações
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+  usuarioId Int
+  
+  evento    Evento?   @relation(fields: [eventoId], references: [id])
+  eventoId  Int?
+  
+  recado    Recado?   @relation(fields: [recadoId], references: [id])
+  recadoId  Int?
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([usuarioId])
+  @@index([lida])
+  @@index([data])
+}
+
+model UsuarioEvento {
+  id         Int      @id @default(autoincrement())
+  confirmado Boolean  @default(false)
+  
+  // Relações
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  usuarioId  Int
+  
+  evento     Evento   @relation(fields: [eventoId], references: [id])
+  eventoId   Int
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@unique([usuarioId, eventoId])
+}
+
+model Aniversario {
+  id        Int       @id @default(autoincrement())
+  data      DateTime
+  mensagem  String?
+  
+  // Relações
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
+  usuarioId Int
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([data])
+} 
