@@ -3,14 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 import ClasseSelector from './ClasseSelector';
 
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  onDelete?: () => void;
   selectedDate: Date | null;
+  deleteLoading?: boolean;
   eventToEdit?: {
     id: number;
     titulo: string;
@@ -22,7 +24,15 @@ interface EventModalProps {
   };
 }
 
-export function EventModal({ isOpen, onClose, onSave, selectedDate, eventToEdit }: EventModalProps) {
+export function EventModal({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  onDelete, 
+  selectedDate, 
+  eventToEdit,
+  deleteLoading = false
+}: EventModalProps) {
   const { data: session } = useSession();
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -33,6 +43,7 @@ export function EventModal({ isOpen, onClose, onSave, selectedDate, eventToEdit 
   const [classeId, setClasseId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   // Inicializar campos com dados do evento a ser editado ou data selecionada
   useEffect(() => {
@@ -100,6 +111,19 @@ export function EventModal({ isOpen, onClose, onSave, selectedDate, eventToEdit 
       setError(err instanceof Error ? err.message : 'Erro ao salvar evento');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    if (confirmDelete) {
+      onDelete && onDelete();
+      setConfirmDelete(false);
+    } else {
+      setConfirmDelete(true);
+      // Resetar o estado após 5 segundos se o usuário não confirmar
+      setTimeout(() => {
+        setConfirmDelete(false);
+      }, 5000);
     }
   };
 
@@ -222,6 +246,32 @@ export function EventModal({ isOpen, onClose, onSave, selectedDate, eventToEdit 
             </div>
           )}
 
+          {eventToEdit && onDelete && (
+            <div className="mt-5 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 font-medium">Ações adicionais:</span>
+                <button
+                  type="button"
+                  onClick={handleDeleteClick}
+                  disabled={deleteLoading || loading}
+                  className={`flex items-center px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    confirmDelete 
+                      ? 'border-red-700 bg-red-600 text-white hover:bg-red-700 focus:ring-red-500' 
+                      : 'border-red-300 text-red-700 bg-white hover:bg-red-50 focus:ring-red-500'
+                  }`}
+                >
+                  <TrashIcon className="h-4 w-4 mr-2" />
+                  {deleteLoading 
+                    ? 'Excluindo...' 
+                    : confirmDelete 
+                      ? 'Confirmar exclusão' 
+                      : 'Excluir evento'
+                  }
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="mt-5 flex justify-end space-x-3">
             <button
               type="button"
@@ -232,7 +282,7 @@ export function EventModal({ isOpen, onClose, onSave, selectedDate, eventToEdit 
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || deleteLoading}
               className="px-4 py-2 border border-transparent rounded-md shadow-sm text-white bg-jd-primary hover:bg-jd-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-jd-primary"
             >
               {loading ? 'Salvando...' : 'Salvar'}

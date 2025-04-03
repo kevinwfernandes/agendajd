@@ -101,6 +101,7 @@ model User {
   
   eventosAutor   Evento[]       @relation("EventoAutor")
   recados        Recado[]
+  comentarios    ComentarioRecado[]
   notificacoes   Notificacao[]
   aniversarios   Aniversario[]
   usuarioEventos UsuarioEvento[]
@@ -154,6 +155,7 @@ model Recado {
   autorId      String
   
   notificacoes Notificacao[]
+  comentarios  ComentarioRecado[]
   
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -236,4 +238,25 @@ model PushSubscription {
   updatedAt  DateTime @updatedAt
   
   @@index([usuarioId])
+}
+
+// Modelo para comentários em recados
+model ComentarioRecado {
+  id           Int      @id @default(autoincrement())
+  texto        String
+  data         DateTime @default(now())
+  
+  // Relações
+  recado       Recado   @relation(fields: [recadoId], references: [id], onDelete: Cascade)
+  recadoId     Int
+  
+  autor        User     @relation(fields: [autorId], references: [id])
+  autorId      String
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@index([recadoId])
+  @@index([autorId])
+  @@index([data])
 } 

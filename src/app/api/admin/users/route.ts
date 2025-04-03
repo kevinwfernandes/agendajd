@@ -2,33 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { PrismaClient } from '@prisma/client';
 import { hash } from 'bcrypt';
+import { authOptions, isUserAdmin } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Verificar autenticação
-    const session = await getServerSession();
-    
+    const session = await getServerSession(authOptions);
     if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: 'Não autenticado' }, { status: 401 });
     }
     
-    // Buscar o usuário no banco para verificar suas permissões
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email as string },
-      select: { tipoUsuario: true },
-    });
+    // Verificar permissões
+    const userTipo = session.user.tipoUsuario;
+    const isAdmin = isUserAdmin(userTipo);
     
-    // Verificar se é administrador
-    if (!user || !['MACOM_ADMIN_GERAL', 'ADMIN_DM', 'ADMIN_FDJ', 'ADMIN_FRATERNA'].includes(user.tipoUsuario || '')) {
-      return NextResponse.json(
-        { error: 'Acesso negado' },
-        { status: 403 }
-      );
+    if (!isAdmin) {
+      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 });
     }
     
     // Buscar todos os usuários
@@ -40,15 +31,23 @@ export async function GET(request: NextRequest) {
         tipoUsuario: true,
         classeId: true,
         createdAt: true,
+        classe: {
+          select: {
+            nome: true
+          }
+        }
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: {
+        name: 'asc'
+      }
     });
     
     return NextResponse.json(users);
+    
   } catch (error) {
     console.error('Erro ao listar usuários:', error);
     return NextResponse.json(
-      { error: 'Erro ao processar a solicitação' },
+      { message: 'Erro ao listar usuários' },
       { status: 500 }
     );
   }

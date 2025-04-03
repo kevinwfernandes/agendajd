@@ -17,9 +17,10 @@ interface Event {
 interface CalendarProps {
   events: Event[];
   onDateClick: (date: Date) => void;
+  onEventClick: (event: Event) => void;
 }
 
-export function Calendar({ events, onDateClick }: CalendarProps) {
+export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<Date[]>([]);
   
@@ -42,6 +43,12 @@ export function Calendar({ events, onDateClick }: CalendarProps) {
   // Filtrar eventos para o dia específico
   const getEventsForDay = (day: Date) => {
     return events.filter(event => isSameDay(new Date(event.data), day));
+  };
+
+  // Manipular clique no evento
+  const handleEventClick = (e: React.MouseEvent, event: Event) => {
+    e.stopPropagation(); // Evitar propagação para o onClick do dia
+    onEventClick(event);
   };
   
   return (
@@ -107,12 +114,13 @@ export function Calendar({ events, onDateClick }: CalendarProps) {
                 {dayEvents.map(event => (
                   <div 
                     key={event.id}
-                    className={`px-1 py-0.5 text-xs rounded truncate ${
+                    onClick={(e) => handleEventClick(e, event)}
+                    className={`px-1 py-0.5 text-xs rounded truncate hover:opacity-75 ${
                       event.publico 
                         ? 'bg-jd-primary text-white'
                         : 'bg-jd-secondary-light text-jd-primary'
                     }`}
-                    title={event.titulo}
+                    title={`${event.titulo} - Clique para ver detalhes`}
                   >
                     {format(new Date(event.data), 'HH:mm')} {event.titulo}
                   </div>

@@ -23,10 +23,19 @@ export default function AdminUsuariosPage() {
 
   // Verifica se o usuário tem permissão
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.tipoUsuario) {
-      const isAdmin = ['MACOM_ADMIN_GERAL', 'ADMIN_DM', 'ADMIN_FDJ', 'ADMIN_FRATERNA'].includes(
-        session.user.tipoUsuario as string
-      );
+    if (status === 'loading') return;
+    
+    if (status === 'unauthenticated') {
+      router.push('/login');
+      return;
+    }
+    
+    if (status === 'authenticated') {
+      const tipoUsuario = session?.user?.tipoUsuario;
+      // Converter para string para garantir compatibilidade
+      const tipoUsuarioStr = tipoUsuario ? String(tipoUsuario) : '';
+      
+      const isAdmin = ['MACOM_ADMIN_GERAL', 'ADMIN_DM', 'ADMIN_FDJ', 'ADMIN_FRATERNA'].includes(tipoUsuarioStr);
       
       if (!isAdmin) {
         router.push('/');

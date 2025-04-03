@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { notifyAboutNewEvent } from '@/lib/pushNotifications';
+import { notifyAboutNewEvent as sendNotificationAboutNewEvent } from '@/lib/pushNotifications';
 
 // Importar authOptions relativo ao projeto
 import { authOptions } from '../../../lib/auth';
@@ -64,8 +64,11 @@ const usuarioPodeVerClasse = (tipoUsuario: string | undefined, nomeClasse: strin
 };
 
 // Função auxiliar para verificar se um usuário é administrador
-const isUserAdmin = (tipoUsuario: string | undefined): boolean => {
-  if (!tipoUsuario) return false;
+const isUserAdmin = (tipoUsuario: string | undefined | null | number): boolean => {
+  if (tipoUsuario === undefined || tipoUsuario === null) return false;
+  
+  // Converter para string para garantir compatibilidade
+  const tipoUsuarioStr = String(tipoUsuario);
   
   const adminTypes = [
     'MACOM_ADMIN_GERAL',
@@ -74,7 +77,7 @@ const isUserAdmin = (tipoUsuario: string | undefined): boolean => {
     'ADMIN_FRATERNA'
   ];
   
-  return adminTypes.includes(tipoUsuario);
+  return adminTypes.includes(tipoUsuarioStr);
 };
 
 // GET /api/eventos - Listar eventos
@@ -164,8 +167,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
     
+    console.log('Tipo de usuário ao criar evento:', session.user.tipoUsuario, 'tipo:', typeof session.user.tipoUsuario);
+    
     // Verificar se é administrador
-    if (!isUserAdmin(session.user.tipoUsuario as string | undefined)) {
+    if (!isUserAdmin(session.user.tipoUsuario)) {
       return NextResponse.json(
         { error: 'Apenas administradores podem criar eventos' },
         { status: 403 }
@@ -191,7 +196,7 @@ export async function POST(request: Request) {
         data: new Date(data.data),
         publico: data.publico || false,
         sincGCalendar: data.sincGCalendar || false,
-        classeId: data.classeId || null,
+        classeId: data.classeId ? Number(data.classeId) : null,
         autorId: session.user.id,
       },
       include: {
@@ -201,7 +206,7 @@ export async function POST(request: Request) {
     
     // Enviar notificações push sobre o novo evento
     try {
-      await notifyAboutNewEvent(evento);
+      await sendNotificationAboutNewEvent(evento);
     } catch (err) {
       console.error('Erro ao enviar notificações push:', err);
       // Continuar mesmo com erro nas notificações
@@ -215,19 +220,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
-
-// Quando enviar notificação sobre novo evento, verificar primeiro se as chaves VAPID estão configuradas
-export async function notifyAboutNewEvent(evento, users) {
-  // Verificar se as chaves VAPID estão configuradas
-  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY;
-  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-
-  if (!vapidPublicKey || !vapidPrivateKey) {
-    console.warn('Chaves VAPID não configuradas. Não será possível enviar notificações push.');
-    return;
-  }
-
-  // Continuar com a lógica de notificação se as chaves estiverem configuradas
-  // resto do código...
 } 

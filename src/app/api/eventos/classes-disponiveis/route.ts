@@ -6,7 +6,7 @@ import { authOptions } from '../../../../lib/auth';
 const prisma = new PrismaClient();
 
 // Função auxiliar para verificar se um usuário é administrador
-const isUserAdmin = (tipoUsuario: string | undefined): boolean => {
+const isUserAdmin = (tipoUsuario: string | undefined | null): boolean => {
   if (!tipoUsuario) return false;
   
   const adminTypes = [
@@ -20,33 +20,37 @@ const isUserAdmin = (tipoUsuario: string | undefined): boolean => {
 };
 
 // Função auxiliar para obter as classes que um usuário pode gerenciar
-const getClassesParaUsuario = async (tipoUsuario: string): Promise<string[]> => {
+const getClassesParaUsuario = async (tipoUsuario: string | null | undefined): Promise<string[]> => {
+  if (!tipoUsuario) return [];
+  
+  // Garantir que tipoUsuario seja uma string
+  const tipoUsuarioStr = String(tipoUsuario);
   const classesPermitidas: string[] = [];
   
   // Administrador geral pode ver todas as classes
-  if (tipoUsuario === 'MACOM_ADMIN_GERAL') {
+  if (tipoUsuarioStr === 'MACOM_ADMIN_GERAL') {
     return ['Sessão Maçônica', 'Reunião DeMolay', 'Reunião FDJ', 'Reunião Fraterna'];
   }
   
   // Adicionar classes específicas com base no tipo de administrador
-  if (tipoUsuario === 'ADMIN_DM' || tipoUsuario === 'MACOM') {
+  if (tipoUsuarioStr === 'ADMIN_DM' || tipoUsuarioStr === 'MACOM') {
     classesPermitidas.push('Reunião DeMolay');
   }
   
-  if (tipoUsuario === 'ADMIN_FDJ' || tipoUsuario === 'MACOM') {
+  if (tipoUsuarioStr === 'ADMIN_FDJ' || tipoUsuarioStr === 'MACOM') {
     classesPermitidas.push('Reunião FDJ');
   }
   
-  if (tipoUsuario === 'ADMIN_FRATERNA' || tipoUsuario === 'MACOM') {
+  if (tipoUsuarioStr === 'ADMIN_FRATERNA' || tipoUsuarioStr === 'MACOM') {
     classesPermitidas.push('Reunião Fraterna');
   }
   
   // Sessão Maçônica só está disponível para administradores maçônicos ou maçons
-  if (tipoUsuario === 'MACOM_ADMIN_GERAL' || 
-      tipoUsuario === 'ADMIN_DM' || 
-      tipoUsuario === 'ADMIN_FDJ' || 
-      tipoUsuario === 'ADMIN_FRATERNA' || 
-      tipoUsuario === 'MACOM') {
+  if (tipoUsuarioStr === 'MACOM_ADMIN_GERAL' || 
+      tipoUsuarioStr === 'ADMIN_DM' || 
+      tipoUsuarioStr === 'ADMIN_FDJ' || 
+      tipoUsuarioStr === 'ADMIN_FRATERNA' || 
+      tipoUsuarioStr === 'MACOM') {
     classesPermitidas.push('Sessão Maçônica');
   }
   

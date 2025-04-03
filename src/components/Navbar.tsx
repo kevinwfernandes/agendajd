@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Bars3Icon, XMarkIcon, UserCircleIcon } from '@heroicons/react/24/outline';
@@ -32,13 +33,20 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white shadow">
+    <nav className="bg-jd-dark text-white shadow">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/">
-                <span className="text-xl font-bold text-jd-primary">AgendaJD</span>
+              <Link href="/" className="flex items-center">
+                <Image 
+                  src="/logojd.jpeg" 
+                  alt="Logo Jacques DeMolay" 
+                  width={40} 
+                  height={40} 
+                  className="mr-2 rounded-md"
+                />
+                <span className="text-xl font-bold text-jd-accent">AgendaJD</span>
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -48,8 +56,8 @@ export default function Navbar() {
                   href={item.href}
                   className={`${
                     pathname === item.href
-                      ? 'border-jd-primary text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                      ? 'border-jd-accent text-jd-accent'
+                      : 'border-transparent text-jd-secondary hover:border-jd-secondary-dark hover:text-jd-secondary-light'
                   } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
                 >
                   {item.label}
@@ -58,7 +66,7 @@ export default function Navbar() {
               
               {isAdmin && (
                 <div className="relative group">
-                  <button className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700">
+                  <button className="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-jd-secondary hover:border-jd-secondary-dark hover:text-jd-secondary-light">
                     Admin <span className="ml-1">▼</span>
                   </button>
                   <div className="absolute left-0 z-10 mt-1 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
@@ -68,7 +76,7 @@ export default function Navbar() {
                         href={item.href}
                         className={`${
                           pathname === item.href
-                            ? 'bg-gray-100 text-gray-900'
+                            ? 'bg-gray-100 text-jd-primary'
                             : 'text-gray-700 hover:bg-gray-100'
                         } block px-4 py-2 text-sm`}
                       >
@@ -87,7 +95,7 @@ export default function Navbar() {
               
               <Link 
                 href="/perfil" 
-                className="p-2 text-gray-600 hover:text-jd-primary"
+                className="p-2 text-jd-secondary hover:text-jd-accent"
                 title="Meu Perfil"
               >
                 <UserCircleIcon className="h-6 w-6" />
@@ -95,7 +103,7 @@ export default function Navbar() {
               
               <button 
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="p-2 text-gray-600 hover:text-red-600"
+                className="p-2 text-jd-secondary hover:text-red-400"
                 title="Sair"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
@@ -107,7 +115,7 @@ export default function Navbar() {
             <div className="hidden sm:flex sm:items-center">
               <Link 
                 href="/login"
-                className="text-jd-primary hover:text-jd-primary-dark px-3 py-2 rounded-md text-sm font-medium"
+                className="text-jd-accent hover:text-jd-accent-light px-3 py-2 rounded-md text-sm font-medium"
               >
                 Entrar
               </Link>
@@ -117,7 +125,7 @@ export default function Navbar() {
           <div className="-mr-2 flex items-center sm:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-jd-primary"
+              className="inline-flex items-center justify-center p-2 rounded-md text-jd-secondary hover:text-jd-secondary-light hover:bg-jd-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-jd-accent"
             >
               <span className="sr-only">Abrir menu</span>
               {isOpen ? (
@@ -131,7 +139,7 @@ export default function Navbar() {
       </div>
 
       {/* Menu mobile */}
-      <div className={`${isOpen ? 'block' : 'hidden'} sm:hidden`}>
+      <div className={`${isOpen ? 'block' : 'hidden'} sm:hidden bg-jd-primary`}>
         <div className="pt-2 pb-3 space-y-1">
           {menuItems.map((item) => (
             <Link 
@@ -139,10 +147,10 @@ export default function Navbar() {
               href={item.href}
               className={`${
                 pathname === item.href
-                  ? 'bg-jd-primary-light text-jd-primary'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  ? 'bg-jd-primary-dark text-jd-accent'
+                  : 'text-jd-secondary hover:bg-jd-primary-dark hover:text-jd-secondary-light'
               } block pl-3 pr-4 py-2 border-l-4 ${
-                pathname === item.href ? 'border-jd-primary' : 'border-transparent'
+                pathname === item.href ? 'border-jd-accent' : 'border-transparent'
               } text-base font-medium`}
               onClick={() => setIsOpen(false)}
             >
@@ -152,7 +160,7 @@ export default function Navbar() {
           
           {isAdmin && (
             <>
-              <div className="pl-3 pr-4 py-2 font-medium text-gray-500">
+              <div className="pl-3 pr-4 py-2 font-medium text-jd-secondary-dark">
                 Admin
               </div>
               {adminMenuItems.map((item) => (
@@ -161,10 +169,10 @@ export default function Navbar() {
                   href={item.href}
                   className={`${
                     pathname === item.href
-                      ? 'bg-jd-primary-light text-jd-primary'
-                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                      ? 'bg-jd-primary-dark text-jd-accent'
+                      : 'text-jd-secondary hover:bg-jd-primary-dark hover:text-jd-secondary-light'
                   } block pl-6 pr-4 py-2 border-l-4 ${
-                    pathname === item.href ? 'border-jd-primary' : 'border-transparent'
+                    pathname === item.href ? 'border-jd-accent' : 'border-transparent'
                   } text-base font-medium`}
                   onClick={() => setIsOpen(false)}
                 >
@@ -176,7 +184,7 @@ export default function Navbar() {
         </div>
         
         {session ? (
-          <div className="pt-4 pb-3 border-t border-gray-200">
+          <div className="pt-4 pb-3 border-t border-jd-primary-light">
             <div className="flex items-center px-4">
               <div className="flex-shrink-0">
                 {session.user.image ? (
@@ -186,16 +194,16 @@ export default function Navbar() {
                     alt={session.user.name || "Usuário"}
                   />
                 ) : (
-                  <div className="h-10 w-10 rounded-full bg-jd-primary flex items-center justify-center text-white">
+                  <div className="h-10 w-10 rounded-full bg-jd-accent flex items-center justify-center text-jd-dark">
                     {session.user.name?.charAt(0) || "U"}
                   </div>
                 )}
               </div>
               <div className="ml-3">
-                <div className="text-base font-medium text-gray-800">
+                <div className="text-base font-medium text-jd-secondary-light">
                   {session.user.name}
                 </div>
-                <div className="text-sm font-medium text-gray-500">
+                <div className="text-sm font-medium text-jd-secondary-dark">
                   {session.user.email}
                 </div>
               </div>
@@ -203,7 +211,7 @@ export default function Navbar() {
             <div className="mt-3 space-y-1">
               <Link 
                 href="/perfil"
-                className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                className="block px-4 py-2 text-base font-medium text-jd-secondary hover:text-jd-secondary-light hover:bg-jd-primary-dark"
                 onClick={() => setIsOpen(false)}
               >
                 Meu Perfil
@@ -213,18 +221,18 @@ export default function Navbar() {
                   setIsOpen(false);
                   signOut({ callbackUrl: '/' });
                 }}
-                className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                className="block w-full text-left px-4 py-2 text-base font-medium text-jd-secondary hover:text-jd-secondary-light hover:bg-jd-primary-dark"
               >
                 Sair
               </button>
             </div>
           </div>
         ) : (
-          <div className="pt-4 pb-3 border-t border-gray-200">
+          <div className="pt-4 pb-3 border-t border-jd-primary-light">
             <div className="mt-3 space-y-1">
               <Link 
                 href="/login"
-                className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                className="block px-4 py-2 text-base font-medium text-jd-secondary hover:text-jd-secondary-light hover:bg-jd-primary-dark"
                 onClick={() => setIsOpen(false)}
               >
                 Entrar

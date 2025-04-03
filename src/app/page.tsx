@@ -1,6 +1,6 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
-import TesteTailwind from '../components/TesteTailwind';
+
 
 export default function Home() {
   return (
@@ -8,7 +8,7 @@ export default function Home() {
       <Navbar />
       
       <div className="flex-1 max-w-7xl mx-auto p-8">
-        <TesteTailwind />
+       
         
         <div className="text-center my-12">
           <h1 className="text-4xl font-bold text-jd-primary mb-4">
