@@ -215,4 +215,19 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+// Quando enviar notificação sobre novo evento, verificar primeiro se as chaves VAPID estão configuradas
+export async function notifyAboutNewEvent(evento, users) {
+  // Verificar se as chaves VAPID estão configuradas
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY;
+  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+  if (!vapidPublicKey || !vapidPrivateKey) {
+    console.warn('Chaves VAPID não configuradas. Não será possível enviar notificações push.');
+    return;
+  }
+
+  // Continuar com a lógica de notificação se as chaves estiverem configuradas
+  // resto do código...
 } 

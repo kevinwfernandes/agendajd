@@ -3,12 +3,20 @@ import webpush from 'web-push';
 
 const prisma = new PrismaClient();
 
-// Configuração VAPID
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || "mailto:admin@agendajd.com",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || ""
-);
+// Verificar se as chaves VAPID estão configuradas
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+
+// Configuração VAPID somente se as chaves estiverem disponíveis
+if (vapidPublicKey && vapidPrivateKey) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || "mailto:admin@agendajd.com",
+    vapidPublicKey,
+    vapidPrivateKey
+  );
+} else {
+  console.warn('Chaves VAPID não configuradas. Notificações push não estarão disponíveis.');
+}
 
 // Função para enviar notificação para um único usuário
 export async function sendNotificationToUser(
@@ -18,6 +26,11 @@ export async function sendNotificationToUser(
   url?: string
 ) {
   try {
+    // Verificar se as chaves VAPID estão configuradas
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      return { success: false, message: 'Chaves VAPID não configuradas' };
+    }
+
     // Buscar todas as inscrições push do usuário
     const subscriptions = await prisma.pushSubscription.findMany({
       where: {
