@@ -4,16 +4,22 @@ import webpush from 'web-push';
 const prisma = new PrismaClient();
 
 // Verificar se as chaves VAPID estão configuradas
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || process.env.VAPID_PUBLIC_KEY || '';
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
+const vapidSubject = process.env.VAPID_SUBJECT || "mailto:admin@agendajd.com";
 
 // Configuração VAPID somente se as chaves estiverem disponíveis
 if (vapidPublicKey && vapidPrivateKey) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:admin@agendajd.com",
-    vapidPublicKey,
-    vapidPrivateKey
-  );
+  try {
+    webpush.setVapidDetails(
+      vapidSubject,
+      vapidPublicKey,
+      vapidPrivateKey
+    );
+    console.log('Configuração VAPID inicializada com sucesso.');
+  } catch (error) {
+    console.error('Erro ao inicializar configuração VAPID:', error);
+  }
 } else {
   console.warn('Chaves VAPID não configuradas. Notificações push não estarão disponíveis.');
 }
@@ -27,7 +33,7 @@ export async function sendNotificationToUser(
 ) {
   try {
     // Verificar se as chaves VAPID estão configuradas
-    if (!vapidPublicKey || !vapidPrivateKey) {
+    if (!vapidPublicKey || !vapidPrivateKey || vapidPublicKey === '' || vapidPrivateKey === '') {
       return { success: false, message: 'Chaves VAPID não configuradas' };
     }
 
