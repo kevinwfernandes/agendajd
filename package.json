@@ -11,7 +11,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:deploy": "prisma migrate deploy",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "deploy-and-seed": "node prisma/deploy-and-seed.js"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.8.0",
