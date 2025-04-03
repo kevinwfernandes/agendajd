@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import Navbar from '@/components/Navbar';
 
 interface Autor {
   id: string;
@@ -343,234 +344,269 @@ export default function RecadosPage() {
   }
   
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-jd-primary mb-8">Mural de Recados</h1>
+    <div className="min-h-screen bg-jd-light flex flex-col">
+      <Navbar />
       
-      {/* Formulário para novo recado */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Publicar um Recado</h2>
+      <div className="flex-1 max-w-7xl mx-auto px-4 py-6">
+        <h1 className="text-2xl font-bold text-jd-primary mb-6">Mural de Recados</h1>
         
-        <form onSubmit={handleSubmitRecado}>
-          <div className="mb-4">
-            <label htmlFor="texto" className="block text-gray-700 text-sm font-bold mb-2">
-              Texto do Recado
-            </label>
-            <textarea
-              id="texto"
-              value={novoRecadoTexto}
-              onChange={(e) => setNovoRecadoTexto(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-jd-primary"
-              rows={4}
-              placeholder="Digite seu recado aqui..."
-              required
-            />
-          </div>
+        {/* Formulário para adicionar novo recado */}
+        <div className="bg-white shadow-md rounded-lg p-4 mb-8">
+          <h2 className="text-xl font-semibold mb-3">Publicar um recado</h2>
           
-          {isAdmin() && (
+          <form onSubmit={handleSubmitRecado}>
+            <div className="mb-4">
+              <textarea
+                value={novoRecadoTexto}
+                onChange={(e) => setNovoRecadoTexto(e.target.value)}
+                className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-jd-primary"
+                rows={3}
+                placeholder="Digite sua mensagem..."
+                required
+              />
+            </div>
+            
             <div className="flex flex-col md:flex-row gap-4 mb-4">
-              <div className="flex-1">
-                <label htmlFor="classe" className="block text-gray-700 text-sm font-bold mb-2">
-                  Visibilidade da Classe
-                </label>
-                <select
-                  id="classe"
-                  value={novoRecadoClasse || 0}
-                  onChange={(e) => setNovoRecadoClasse(Number(e.target.value) || null)}
-                  className="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-jd-primary"
-                  disabled={novoRecadoGlobal}
-                >
-                  <option value={0}>Selecione uma classe</option>
-                  {classes.map((classe) => (
-                    <option key={classe.id} value={classe.id}>
-                      {classe.nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="flex items-center mt-6">
+              <div className="flex items-center">
                 <input
-                  id="global"
                   type="checkbox"
+                  id="global"
                   checked={novoRecadoGlobal}
                   onChange={(e) => setNovoRecadoGlobal(e.target.checked)}
-                  className="h-4 w-4 text-jd-primary focus:ring-jd-primary border-gray-300 rounded"
+                  className="mr-2 h-4 w-4 text-jd-primary focus:ring-jd-primary border-gray-300 rounded"
                 />
-                <label htmlFor="global" className="ml-2 block text-gray-700">
-                  Recado Global (visível para todos)
+                <label htmlFor="global" className="text-sm text-gray-700">
+                  Recado público (visível para todos)
                 </label>
               </div>
-            </div>
-          )}
-          
-          {mensagem && (
-            <div className={`mb-4 p-3 rounded ${mensagem.tipo === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              {mensagem.texto}
-            </div>
-          )}
-          
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="bg-jd-primary hover:bg-jd-primary-dark text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors"
-              disabled={enviandoRecado}
-            >
-              {enviandoRecado ? 'Publicando...' : 'Publicar Recado'}
-            </button>
-          </div>
-        </form>
-      </div>
-      
-      {/* Lista de recados */}
-      {loading ? (
-        <div className="flex justify-center my-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-jd-primary"></div>
-        </div>
-      ) : recados.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          Nenhum recado encontrado.
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {recados.map((recado) => (
-            <div key={recado.id} className="bg-white shadow-md rounded-lg overflow-hidden">
-              <div className="p-6">
-                {/* Cabeçalho do recado */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center">
-                    {recado.autor?.image && (
-                      <img
-                        src={recado.autor.image}
-                        alt={recado.autor.name || 'Avatar'}
-                        className="w-10 h-10 rounded-full mr-3"
-                      />
-                    )}
-                    <div>
-                      <div className="font-semibold">{recado.autor?.name || 'Usuário'}</div>
-                      <div className="text-xs text-gray-500 flex items-center">
-                        {formatarTipoUsuario(recado.autor?.tipoUsuario)}
-                        {recado.classe && (
-                          <>
-                            <span className="mx-1">•</span>
-                            <span>{recado.classe.nome}</span>
-                          </>
-                        )}
-                        {recado.global && (
-                          <>
-                            <span className="mx-1">•</span>
-                            <span className="text-jd-primary font-semibold">Global</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {formatarData(recado.data)}
-                  </div>
-                </div>
-                
-                {/* Conteúdo do recado */}
-                <div className="text-gray-800 whitespace-pre-line mb-4">
-                  {recado.texto}
-                </div>
-                
-                {/* Botão para mostrar/esconder comentários */}
-                <button
-                  onClick={() => toggleComentarios(recado.id)}
-                  className="text-jd-secondary hover:text-jd-secondary-dark text-sm font-medium"
-                >
-                  {recado.showComments ? 'Esconder comentários' : `${recado.comentarios ? recado.comentarios.length : 'Ver'} comentários`}
-                </button>
-              </div>
               
-              {/* Seção de comentários */}
-              {recado.showComments && (
-                <div className="bg-gray-50 p-4 border-t">
-                  {/* Lista de comentários */}
-                  {recado.comentarios && recado.comentarios.length > 0 ? (
-                    <div className="space-y-4 mb-4">
-                      {recado.comentarios.map((comentario) => (
-                        <div key={comentario.id} className="flex space-x-3">
-                          {comentario.autor?.image && (
-                            <img
-                              src={comentario.autor.image}
-                              alt={comentario.autor.name || 'Avatar'}
-                              className="w-8 h-8 rounded-full"
-                            />
-                          )}
-                          <div className="flex-1">
-                            <div className="bg-white p-3 rounded-lg shadow-sm">
-                              <div className="font-medium">{comentario.autor?.name || 'Usuário'}</div>
-                              <div className="text-sm text-gray-800">{comentario.texto}</div>
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                              {formatarData(comentario.data)}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-2 text-gray-500 text-sm">
-                      Nenhum comentário ainda.
-                    </div>
-                  )}
-                  
-                  {/* Formulário para adicionar comentário */}
-                  <div className="flex space-x-3 mt-4">
-                    {session?.user?.image && (
-                      <img
-                        src={session.user.image}
-                        alt={session.user.name || 'Avatar'}
-                        className="w-8 h-8 rounded-full"
-                      />
-                    )}
-                    <div className="flex-1 flex">
-                      <input
-                        type="text"
-                        value={novoComentarioTexto[recado.id] || ''}
-                        onChange={(e) => handleComentarioChange(recado.id, e.target.value)}
-                        placeholder="Escreva um comentário..."
-                        className="flex-1 border rounded-l-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-jd-secondary"
-                      />
-                      <button
-                        onClick={() => submitComentario(recado.id)}
-                        disabled={recado.isSubmittingComment || !novoComentarioTexto[recado.id]?.trim()}
-                        className="bg-jd-secondary hover:bg-jd-secondary-dark text-white px-4 py-2 rounded-r-lg disabled:opacity-50"
-                      >
-                        {recado.isSubmittingComment ? '...' : 'Enviar'}
-                      </button>
-                    </div>
-                  </div>
+              {!novoRecadoGlobal && (
+                <div className="flex-1">
+                  <select
+                    value={novoRecadoClasse || ''}
+                    onChange={(e) => setNovoRecadoClasse(e.target.value ? Number(e.target.value) : null)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-jd-primary"
+                    required={!novoRecadoGlobal}
+                  >
+                    <option value="">Selecione uma classe</option>
+                    {classes.map(classe => (
+                      <option key={classe.id} value={classe.id}>{classe.nome}</option>
+                    ))}
+                  </select>
                 </div>
               )}
             </div>
-          ))}
-          
-          {/* Paginação */}
-          {totalPaginas > 1 && (
-            <div className="flex justify-center space-x-2 mt-8">
+            
+            {mensagem && (
+              <div className={`p-3 mb-4 rounded-md ${
+                mensagem.tipo === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                {mensagem.texto}
+              </div>
+            )}
+            
+            <div className="flex justify-end">
               <button
-                onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
-                disabled={paginaAtual === 1}
-                className="px-4 py-2 border rounded-md bg-white text-jd-primary hover:bg-gray-50 disabled:opacity-50"
+                type="submit"
+                disabled={enviandoRecado}
+                className={`px-4 py-2 bg-jd-primary text-white rounded-md hover:bg-jd-primary-dark transition-colors ${
+                  enviandoRecado ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
-                Anterior
-              </button>
-              <span className="px-4 py-2 text-gray-700">
-                Página {paginaAtual} de {totalPaginas}
-              </span>
-              <button
-                onClick={() => setPaginaAtual(prev => Math.min(prev + 1, totalPaginas))}
-                disabled={paginaAtual === totalPaginas}
-                className="px-4 py-2 border rounded-md bg-white text-jd-primary hover:bg-gray-50 disabled:opacity-50"
-              >
-                Próxima
+                {enviandoRecado ? 'Publicando...' : 'Publicar Recado'}
               </button>
             </div>
-          )}
+          </form>
         </div>
-      )}
+        
+        {/* Lista de recados */}
+        {loading ? (
+          <div className="flex justify-center my-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-jd-primary"></div>
+          </div>
+        ) : (
+          <>
+            {recados.length === 0 ? (
+              <div className="bg-white shadow-md rounded-lg p-6 text-center">
+                <p className="text-gray-500">Nenhum recado disponível no momento.</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {recados.map((recado) => {
+                  const dataRecado = new Date(recado.data);
+                  const formattedDate = format(dataRecado, "dd 'de' MMMM 'de' yyyy 'às' HH:mm", { locale: ptBR });
+                  const isRecadoAutor = session?.user?.id === recado.autorId;
+                  
+                  return (
+                    <div key={recado.id} className="bg-white shadow-md rounded-lg overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-medium text-jd-primary">
+                              {recado.autor?.name || 'Usuário'}
+                              <span className="text-xs ml-2 text-gray-500">
+                                {formatarTipoUsuario(recado.autor?.tipoUsuario)}
+                              </span>
+                            </p>
+                            <p className="text-xs text-gray-500">{formattedDate}</p>
+                          </div>
+                          
+                          {recado.classe && (
+                            <span className="bg-jd-secondary-light text-jd-primary text-xs px-2 py-1 rounded">
+                              {recado.classe.nome}
+                            </span>
+                          )}
+                          
+                          {recado.global && (
+                            <span className="bg-jd-primary text-white text-xs px-2 py-1 rounded">
+                              Público
+                            </span>
+                          )}
+                        </div>
+                        
+                        <p className="text-gray-700 whitespace-pre-wrap">{recado.texto}</p>
+                        
+                        <div className="mt-3 flex justify-between items-center">
+                          <button
+                            onClick={() => toggleComentarios(recado.id)}
+                            className="text-sm text-jd-primary hover:text-jd-primary-dark"
+                          >
+                            {recado.showComments ? 'Ocultar comentários' : `Comentários (${recado.comentarios?.length || 0})`}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {recado.showComments && (
+                        <div className="border-t border-gray-200">
+                          {/* Comentários existentes */}
+                          <div className="px-4 py-2 bg-gray-50">
+                            {recado.comentarios && recado.comentarios.length > 0 ? (
+                              <div className="space-y-3">
+                                {recado.comentarios.map(comentario => {
+                                  const dataComentario = new Date(comentario.data);
+                                  const formattedCommentDate = format(
+                                    dataComentario,
+                                    "dd/MM/yyyy 'às' HH:mm",
+                                    { locale: ptBR }
+                                  );
+                                  
+                                  return (
+                                    <div key={comentario.id} className="pb-2 border-b border-gray-200 last:border-0">
+                                      <div className="flex justify-between items-start">
+                                        <p className="font-medium text-sm">
+                                          {comentario.autor?.name || 'Usuário'}
+                                          <span className="text-xs ml-1 text-gray-500">
+                                            ({formatarTipoUsuario(comentario.autor?.tipoUsuario)})
+                                          </span>
+                                        </p>
+                                        <p className="text-xs text-gray-500">{formattedCommentDate}</p>
+                                      </div>
+                                      <p className="text-sm text-gray-700 mt-1">{comentario.texto}</p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-500 py-2">Nenhum comentário ainda.</p>
+                            )}
+                          </div>
+                          
+                          {/* Formulário para adicionar comentário */}
+                          <div className="p-3 bg-gray-50 border-t border-gray-200">
+                            <div className="flex">
+                              <input
+                                type="text"
+                                value={novoComentarioTexto[recado.id] || ''}
+                                onChange={(e) => handleComentarioChange(recado.id, e.target.value)}
+                                placeholder="Escreva um comentário..."
+                                className="flex-1 p-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-jd-primary text-sm"
+                              />
+                              <button
+                                onClick={() => submitComentario(recado.id)}
+                                disabled={recado.isSubmittingComment || !novoComentarioTexto[recado.id]?.trim()}
+                                className={`px-3 bg-jd-primary text-white rounded-r-md hover:bg-jd-primary-dark transition-colors ${
+                                  recado.isSubmittingComment || !novoComentarioTexto[recado.id]?.trim()
+                                    ? 'opacity-70 cursor-not-allowed'
+                                    : ''
+                                }`}
+                              >
+                                {recado.isSubmittingComment ? '...' : 'Enviar'}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            {/* Paginação */}
+            {totalPaginas > 1 && (
+              <div className="mt-8 flex justify-center">
+                <nav className="inline-flex rounded-md shadow">
+                  <button
+                    onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
+                    disabled={paginaAtual === 1}
+                    className={`px-3 py-1 rounded-l-md border border-gray-300 ${
+                      paginaAtual === 1
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-jd-primary hover:bg-gray-50'
+                    }`}
+                  >
+                    Anterior
+                  </button>
+                  
+                  {[...Array(totalPaginas)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setPaginaAtual(i + 1)}
+                      className={`px-3 py-1 border-t border-b border-gray-300 ${
+                        paginaAtual === i + 1
+                          ? 'bg-jd-primary text-white'
+                          : 'bg-white text-jd-primary hover:bg-gray-50'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => setPaginaAtual(prev => Math.min(prev + 1, totalPaginas))}
+                    disabled={paginaAtual === totalPaginas}
+                    className={`px-3 py-1 rounded-r-md border border-gray-300 ${
+                      paginaAtual === totalPaginas
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white text-jd-primary hover:bg-gray-50'
+                    }`}
+                  >
+                    Próximo
+                  </button>
+                </nav>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      
+      <footer className="bg-jd-dark text-white py-6 mt-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-center md:justify-between items-center flex-wrap">
+            <div className="text-center md:text-left">
+              <h3 className="text-jd-accent text-xl font-bold">AgendaJD</h3>
+              <p className="text-jd-secondary-dark">
+                Mural de Recados
+              </p>
+            </div>
+            <div className="mt-4 md:mt-0 w-full md:w-auto text-center">
+              <p className="text-jd-secondary-dark">
+                &copy; {new Date().getFullYear()} - Todos os direitos reservados
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 

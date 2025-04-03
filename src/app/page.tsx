@@ -1,10 +1,10 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
-
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col">
+    <main className="min-h-screen flex flex-col bg-jd-light">
       <Navbar />
       
       <div className="flex-1 max-w-7xl mx-auto p-8">
@@ -15,45 +15,55 @@ export default function Home() {
             Bem-vindo ao AgendaJD
           </h1>
           <p className="text-lg text-jd-primary-dark mb-8">
-            Seu flanelógrafo digital e sistema de agenda para a Loja Jacques DeMolay
+            Seu flanelógrafo digital e sistema de agenda para a Loja Jacques de Molay
           </p>
-          <div className="flex justify-center gap-4">
-            <button className="bg-jd-primary text-white py-3 px-6 rounded hover:bg-jd-primary-dark transition-colors">
-              Ver Eventos
-            </button>
-            <button className="bg-jd-secondary text-jd-primary py-3 px-6 rounded hover:bg-jd-secondary-dark transition-colors">
-              Acessar Mural
-            </button>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link href="/calendario">
+              <button className="bg-jd-primary text-white py-3 px-6 rounded hover:bg-jd-primary-dark transition-colors">
+                Ver Calendário
+              </button>
+            </Link>
+            <Link href="/recados">
+              <button className="bg-jd-secondary text-jd-primary py-3 px-6 rounded hover:bg-jd-secondary-dark transition-colors">
+                Acessar Mural
+              </button>
+            </Link>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 my-12">
-          <div className="bg-white rounded-lg p-6 shadow-jd">
-            <h2 className="text-2xl font-bold text-jd-primary text-center mb-2">
-              Eventos e Agenda
-            </h2>
-            <p className="text-center">
-              Acompanhe todos os eventos e sincronize com seu Google Calendar.
-            </p>
-          </div>
+          <Link href="/calendario" className="block">
+            <div className="bg-white rounded-lg p-6 shadow-jd hover:shadow-lg transition-shadow">
+              <h2 className="text-2xl font-bold text-jd-primary text-center mb-2">
+                Eventos e Agenda
+              </h2>
+              <p className="text-center">
+                Acompanhe todos os eventos e sincronize com seu Google Calendar.
+              </p>
+            </div>
+          </Link>
           
-          <div className="bg-white rounded-lg p-6 shadow-jd">
-            <h2 className="text-2xl font-bold text-jd-primary text-center mb-2">
-              Recados no Mural
-            </h2>
-            <p className="text-center">
-              Fique por dentro de todos os recados e anúncios importantes.
-            </p>
-          </div>
+          <Link href="/recados" className="block">
+            <div className="bg-white rounded-lg p-6 shadow-jd hover:shadow-lg transition-shadow">
+              <h2 className="text-2xl font-bold text-jd-primary text-center mb-2">
+                Recados no Mural
+              </h2>
+              <p className="text-center">
+                Fique por dentro de todos os recados e anúncios importantes.
+              </p>
+            </div>
+          </Link>
           
-          <div className="bg-white rounded-lg p-6 shadow-jd">
-            <h2 className="text-2xl font-bold text-jd-primary text-center mb-2">
-              Notificações
-            </h2>
-            <p className="text-center">
-              Receba notificações sobre eventos, aniversários e recados.
-            </p>
-          </div>
+          <Link href="/perfil" className="block">
+            <div className="bg-white rounded-lg p-6 shadow-jd hover:shadow-lg transition-shadow">
+              <h2 className="text-2xl font-bold text-jd-primary text-center mb-2">
+                Notificações
+              </h2>
+              <p className="text-center">
+                Receba notificações sobre eventos, aniversários e recados.
+              </p>
+            </div>
+          </Link>
         </div>
       </div>
 

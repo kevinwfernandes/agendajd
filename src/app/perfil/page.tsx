@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { PushNotificationManager } from '@/components/PushNotificationManager';
 import { Classe } from '@prisma/client';
+import Navbar from '@/components/Navbar';
 
 export default function PerfilPage() {
   const { data: session, status, update } = useSession();
@@ -109,8 +110,9 @@ export default function PerfilPage() {
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-4">
+      <div className="min-h-screen bg-jd-light flex flex-col">
+        <Navbar />
+        <div className="flex-1 max-w-4xl mx-auto px-4 py-8">
           <div className="animate-pulse flex justify-center items-center h-64">
             <p className="text-xl text-jd-primary">Carregando...</p>
           </div>
@@ -120,9 +122,11 @@ export default function PerfilPage() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Meu Perfil</h1>
+    <div className="min-h-screen bg-jd-light flex flex-col">
+      <Navbar />
+      
+      <div className="flex-1 max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-jd-primary mb-6">Meu Perfil</h1>
         
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Informações Pessoais</h2>
@@ -225,6 +229,24 @@ export default function PerfilPage() {
           </button>
         </div>
       </div>
+      
+      <footer className="bg-jd-dark text-white py-6 mt-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-center md:justify-between items-center flex-wrap">
+            <div className="text-center md:text-left">
+              <h3 className="text-jd-accent text-xl font-bold">AgendaJD</h3>
+              <p className="text-jd-secondary-dark">
+                Gerenciamento de Perfil
+              </p>
+            </div>
+            <div className="mt-4 md:mt-0 w-full md:w-auto text-center">
+              <p className="text-jd-secondary-dark">
+                &copy; {new Date().getFullYear()} - Todos os direitos reservados
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 } 

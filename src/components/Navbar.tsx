@@ -139,7 +139,7 @@ export default function Navbar() {
       </div>
 
       {/* Menu mobile */}
-      <div className={`${isOpen ? 'block' : 'hidden'} sm:hidden bg-jd-primary`}>
+      <div className={`${isOpen ? 'block' : 'hidden'} sm:hidden bg-jd-dark border-t border-jd-primary`}>
         <div className="pt-2 pb-3 space-y-1">
           {menuItems.map((item) => (
             <Link 
@@ -147,8 +147,8 @@ export default function Navbar() {
               href={item.href}
               className={`${
                 pathname === item.href
-                  ? 'bg-jd-primary-dark text-jd-accent'
-                  : 'text-jd-secondary hover:bg-jd-primary-dark hover:text-jd-secondary-light'
+                  ? 'bg-jd-primary text-jd-accent'
+                  : 'text-jd-secondary-light hover:bg-jd-primary hover:text-jd-secondary-light'
               } block pl-3 pr-4 py-2 border-l-4 ${
                 pathname === item.href ? 'border-jd-accent' : 'border-transparent'
               } text-base font-medium`}
@@ -160,7 +160,7 @@ export default function Navbar() {
           
           {isAdmin && (
             <>
-              <div className="pl-3 pr-4 py-2 font-medium text-jd-secondary-dark">
+              <div className="pl-3 pr-4 py-2 font-medium text-jd-accent">
                 Admin
               </div>
               {adminMenuItems.map((item) => (
@@ -169,8 +169,8 @@ export default function Navbar() {
                   href={item.href}
                   className={`${
                     pathname === item.href
-                      ? 'bg-jd-primary-dark text-jd-accent'
-                      : 'text-jd-secondary hover:bg-jd-primary-dark hover:text-jd-secondary-light'
+                      ? 'bg-jd-primary text-jd-accent'
+                      : 'text-jd-secondary-light hover:bg-jd-primary hover:text-jd-secondary-light'
                   } block pl-6 pr-4 py-2 border-l-4 ${
                     pathname === item.href ? 'border-jd-accent' : 'border-transparent'
                   } text-base font-medium`}
@@ -203,7 +203,7 @@ export default function Navbar() {
                 <div className="text-base font-medium text-jd-secondary-light">
                   {session.user.name}
                 </div>
-                <div className="text-sm font-medium text-jd-secondary-dark">
+                <div className="text-sm font-medium text-jd-secondary">
                   {session.user.email}
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function Navbar() {
             <div className="mt-3 space-y-1">
               <Link 
                 href="/perfil"
-                className="block px-4 py-2 text-base font-medium text-jd-secondary hover:text-jd-secondary-light hover:bg-jd-primary-dark"
+                className="block px-4 py-2 text-base font-medium text-jd-secondary-light hover:bg-jd-primary hover:text-white"
                 onClick={() => setIsOpen(false)}
               >
                 Meu Perfil
@@ -221,7 +221,7 @@ export default function Navbar() {
                   setIsOpen(false);
                   signOut({ callbackUrl: '/' });
                 }}
-                className="block w-full text-left px-4 py-2 text-base font-medium text-jd-secondary hover:text-jd-secondary-light hover:bg-jd-primary-dark"
+                className="block w-full text-left px-4 py-2 text-base font-medium text-jd-secondary-light hover:bg-jd-primary hover:text-white"
               >
                 Sair
               </button>
@@ -232,7 +232,7 @@ export default function Navbar() {
             <div className="mt-3 space-y-1">
               <Link 
                 href="/login"
-                className="block px-4 py-2 text-base font-medium text-jd-secondary hover:text-jd-secondary-light hover:bg-jd-primary-dark"
+                className="block px-4 py-2 text-base font-medium text-jd-secondary-light hover:bg-jd-primary hover:text-white"
                 onClick={() => setIsOpen(false)}
               >
                 Entrar

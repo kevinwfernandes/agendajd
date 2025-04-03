@@ -23,6 +23,7 @@ interface CalendarProps {
 export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState<Date[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   
   useEffect(() => {
     // Gerar todos os dias do mês atual
@@ -34,10 +35,12 @@ export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
   
   const nextMonth = () => {
     setCurrentMonth(addMonths(currentMonth, 1));
+    setSelectedEventId(null);
   };
   
   const prevMonth = () => {
     setCurrentMonth(subMonths(currentMonth, 1));
+    setSelectedEventId(null);
   };
   
   // Filtrar eventos para o dia específico
@@ -48,34 +51,42 @@ export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
   // Manipular clique no evento
   const handleEventClick = (e: React.MouseEvent, event: Event) => {
     e.stopPropagation(); // Evitar propagação para o onClick do dia
+    setSelectedEventId(event.id);
     onEventClick(event);
+  };
+  
+  // Formatar a hora para exibição
+  const formatEventTime = (date: Date) => {
+    return format(date, 'HH:mm');
   };
   
   return (
     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-xl font-semibold text-gray-800">
+      <div className="flex items-center justify-between p-4 border-b bg-jd-primary text-white">
+        <h2 className="text-xl font-semibold">
           {format(currentMonth, 'MMMM yyyy', { locale: ptBR })}
         </h2>
         <div className="flex space-x-2">
           <button 
             onClick={prevMonth}
-            className="p-2 rounded-full hover:bg-gray-100"
+            className="p-2 rounded-full hover:bg-jd-primary-dark text-white"
+            aria-label="Mês anterior"
           >
-            <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
+            <ChevronLeftIcon className="h-5 w-5" />
           </button>
           <button 
             onClick={nextMonth}
-            className="p-2 rounded-full hover:bg-gray-100"
+            className="p-2 rounded-full hover:bg-jd-primary-dark text-white"
+            aria-label="Próximo mês"
           >
-            <ChevronRightIcon className="h-5 w-5 text-gray-600" />
+            <ChevronRightIcon className="h-5 w-5" />
           </button>
         </div>
       </div>
       
       <div className="grid grid-cols-7 gap-px bg-gray-200">
         {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-          <div key={day} className="bg-gray-50 p-2 text-center text-sm font-medium text-gray-500">
+          <div key={day} className="bg-jd-primary-light p-2 text-center text-sm font-medium text-white">
             {day}
           </div>
         ))}
@@ -84,7 +95,7 @@ export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
       <div className="grid grid-cols-7 gap-px bg-gray-200">
         {/* Dias do mês anterior para preencher a primeira semana */}
         {Array.from({ length: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay() }).map((_, index) => (
-          <div key={`prev-${index}`} className="bg-white p-2 h-28 md:h-32">
+          <div key={`prev-${index}`} className="bg-white p-2 h-16 md:h-32">
             <span className="text-gray-300"></span>
           </div>
         ))}
@@ -98,7 +109,7 @@ export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
             <div 
               key={day.toString()} 
               onClick={() => onDateClick(day)}
-              className={`bg-white p-2 h-28 md:h-32 relative overflow-hidden cursor-pointer hover:bg-gray-50 transition-colors ${
+              className={`bg-white p-2 h-16 md:h-32 relative overflow-hidden cursor-pointer hover:bg-gray-50 transition-colors ${
                 isCurrentDay ? 'border-l-4 border-jd-primary' : ''
               }`}
             >
@@ -110,26 +121,35 @@ export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
                 </span>
               </div>
               
-              <div className="mt-1 space-y-1 max-h-[80px] overflow-y-auto">
+              <div className="mt-1 space-y-1 max-h-[75%] overflow-y-auto">
                 {dayEvents.map(event => (
                   <div 
                     key={event.id}
                     onClick={(e) => handleEventClick(e, event)}
-                    className={`px-1 py-0.5 text-xs rounded truncate hover:opacity-75 ${
+                    className={`px-1.5 py-0.5 text-xs md:text-sm rounded truncate flex items-center transition-all ${
+                      event.id === selectedEventId 
+                        ? 'ring-2 ring-offset-1 ring-jd-accent shadow-md transform scale-105 z-10 border-2 border-jd-accent'
+                        : ''
+                    } ${
                       event.publico 
-                        ? 'bg-jd-primary text-white'
-                        : 'bg-jd-secondary-light text-jd-primary'
+                        ? 'bg-jd-primary text-white hover:bg-jd-primary-light'
+                        : 'bg-jd-secondary-light text-jd-primary hover:bg-jd-secondary'
                     }`}
                     title={`${event.titulo} - Clique para ver detalhes`}
                   >
-                    {format(new Date(event.data), 'HH:mm')} {event.titulo}
+                    <span className="inline-block w-8 md:w-10 font-medium">
+                      {formatEventTime(new Date(event.data))}
+                    </span>
+                    <span className="truncate">
+                      {event.titulo}
+                    </span>
                   </div>
                 ))}
               </div>
               
-              {dayEvents.length > 2 && (
-                <div className="absolute bottom-1 right-1 text-xs text-gray-500">
-                  +{dayEvents.length - 2} mais
+              {dayEvents.length > 1 && (
+                <div className="absolute bottom-1 right-1 text-xs text-white bg-jd-primary px-1.5 py-0.5 rounded-full">
+                  {dayEvents.length}
                 </div>
               )}
             </div>
@@ -138,7 +158,7 @@ export function Calendar({ events, onDateClick, onEventClick }: CalendarProps) {
         
         {/* Dias do próximo mês para completar a última semana */}
         {Array.from({ length: 6 - new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDay() }).map((_, index) => (
-          <div key={`next-${index}`} className="bg-white p-2 h-28 md:h-32">
+          <div key={`next-${index}`} className="bg-white p-2 h-16 md:h-32">
             <span className="text-gray-300"></span>
           </div>
         ))}

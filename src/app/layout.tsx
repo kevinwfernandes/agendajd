@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgendaJD - Loja Jacques DeMolay",
-  description: "Flanelógrafo digital e sistema de agenda para a Loja Jacques DeMolay",
+  title: "AgendaJD - Loja Jacques de Molay",
+  description: "Flanelógrafo digital e sistema de agenda para a Loja Jacques de Molay",
   manifest: "/manifest.json",
 };
 
