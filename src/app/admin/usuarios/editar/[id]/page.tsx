@@ -11,6 +11,7 @@ type User = {
   email: string;
   tipoUsuario: string;
   classeId?: number | null;
+  dataNascimento?: string | null;
 };
 
 type Classe = {
@@ -30,6 +31,7 @@ export default function EditarUsuarioPage() {
   const [email, setEmail] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState('');
   const [classeId, setClasseId] = useState<number | null>(null);
+  const [dataNascimento, setDataNascimento] = useState<string>('');
   const [classes, setClasses] = useState<Classe[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -70,6 +72,7 @@ export default function EditarUsuarioPage() {
       setEmail(userData.email);
       setTipoUsuario(userData.tipoUsuario || '');
       setClasseId(userData.classeId);
+      setDataNascimento(userData.dataNascimento ? new Date(userData.dataNascimento).toISOString().split('T')[0] : '');
     } catch (err) {
       setError('Não foi possível carregar os dados do usuário');
       console.error(err);
@@ -101,7 +104,8 @@ export default function EditarUsuarioPage() {
         name: nome,
         email,
         tipoUsuario,
-        classeId: classeId || null
+        classeId: classeId || null,
+        dataNascimento: dataNascimento || null
       };
 
       const response = await fetch(`/api/usuarios/atualizar`, {
@@ -209,6 +213,19 @@ export default function EditarUsuarioPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-jd-primary focus:border-jd-primary sm:text-sm"
                     required
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="dataNascimento" className="block text-sm font-medium text-gray-700">
+                    Data de Nascimento
+                  </label>
+                  <input
+                    type="date"
+                    id="dataNascimento"
+                    value={dataNascimento}
+                    onChange={(e) => setDataNascimento(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-jd-primary focus:border-jd-primary sm:text-sm"
                   />
                 </div>
 

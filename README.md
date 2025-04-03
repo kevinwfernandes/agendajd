@@ -1,162 +1,218 @@
-# AgendaJD
+# 📅 AgendaJD - Sistema de Agenda e Mural para Loja Jacques DeMolay
 
-Sistema de gerenciamento de agenda e comunicação para a Loja Jacques DeMolay e entidades associadas. Funcionando como um flanelógrafo digital e agenda com integração ao Google Calendar.
+Este é um sistema completo para gerenciamento de eventos, recados e notificações, desenvolvido especificamente para a Loja Jacques DeMolay.
 
-## Tecnologias
+## 🌟 Funcionalidades Principais
 
-- Next.js
-- Prisma
+- **🗓️ Calendário de Eventos**: Visualização e gerenciamento de eventos
+- **📝 Mural de Recados**: Sistema de comunicação com comentários
+- **🔔 Notificações Push**: Alertas para eventos e recados
+- **👤 Gestão de Usuários**: Diferentes níveis de acesso por tipo de usuário
+- **🏛️ Sistema de Classes**: Organização por grupos e classes
+- **📱 Interface Responsiva**: Compatível com desktop e dispositivos móveis
+
+## 🛠️ Tecnologias Utilizadas
+
+- **Next.js 15**: Framework React com App Router
+- **TypeScript**: Para tipagem estática
+- **Prisma ORM**: Para acesso ao banco de dados
+- **PostgreSQL**: Banco de dados relacional
+- **NextAuth.js**: Autenticação e gerenciamento de sessões
+- **TailwindCSS**: Framework CSS para estilização
+- **Web Push**: Sistema de notificações push
+
+## 📁 Estrutura do Projeto
+
+```
+/src
+  /app                   # Rotas e páginas (App Router)
+    /api                 # APIs e endpoints
+      /auth              # Autenticação
+      /eventos           # API de eventos
+      /recados           # API de recados
+      /push              # API de notificações push
+      /usuarios          # API de usuários
+      /classes           # API de classes
+    /calendario          # Página de calendário
+    /recados             # Página de mural de recados
+    /perfil              # Página de perfil do usuário
+    /admin               # Páginas de administração
+    /debug               # Página de diagnóstico (desenvolvimento)
+  
+  /components            # Componentes reutilizáveis
+    Navbar.tsx           # Barra de navegação
+    Calendar.tsx         # Componente de calendário
+    EventModal.tsx       # Modal de criação/edição de eventos
+    PushNotificationManager.tsx # Gerenciador de notificações push
+    NotificacoesDropdown.tsx # Dropdown de notificações
+    
+  /lib                   # Bibliotecas e utilidades
+    auth.ts              # Configuração de autenticação
+    
+/prisma                  # Configuração do Prisma ORM
+  schema.prisma          # Schema do banco de dados
+  
+/public                  # Arquivos estáticos
+  sw.js                  # Service Worker para notificações push
+  pwa.js                 # Configuração de PWA (Progressive Web App)
+  
+/.env.local              # Variáveis de ambiente (não versionado)
+```
+
+## 💽 Modelos de Dados
+
+### Usuários e Autenticação
+- **User**: Usuários do sistema
+- **Account**: Contas vinculadas (NextAuth)
+- **Session**: Sessões ativas (NextAuth)
+- **VerificationToken**: Tokens de verificação (NextAuth)
+
+### Conteúdo
+- **Evento**: Eventos do calendário
+- **Recado**: Recados no mural
+- **ComentarioRecado**: Comentários em recados
+
+### Organização
+- **Classe**: Classes ou grupos organizacionais
+
+### Notificações
+- **Notificacao**: Notificações do sistema
+- **PushSubscription**: Inscrições de notificações push
+- **Aniversario**: Registro de aniversários
+
+## 🔐 Controle de Acesso
+
+O sistema possui diferentes níveis de acesso:
+
+- **Administrador Geral (MACOM_ADMIN_GERAL)**: Acesso total ao sistema
+- **Administradores por Área**: ADMIN_DM, ADMIN_FDJ, ADMIN_FRATERNA
+- **Membros Comuns**: MACOM, MEMBRO_DM, MEMBRO_FDJ, MEMBRO_FRATERNA
+
+## 🔔 Sistema de Notificações
+
+### Como Funciona
+
+1. **Registro**:
+   - Usuários se registram para receber notificações na página de perfil
+   - O sistema armazena a inscrição no banco de dados (tabela PushSubscription)
+
+2. **Disparo**:
+   - Notificações são enviadas quando:
+     - Eventos estão prestes a acontecer
+     - Novos recados são publicados
+     - Comentários são adicionados em recados
+     - Aniversários de membros
+
+3. **Entrega**:
+   - O service worker (sw.js) recebe e exibe as notificações
+   - Cliques nas notificações direcionam o usuário para a página relevante
+
+### Configuração
+
+Para habilitar as notificações push, é necessário configurar:
+
+1. **Variáveis de ambiente**:
+   ```
+   NEXT_PUBLIC_VAPID_PUBLIC_KEY=sua_chave_publica
+   VAPID_PRIVATE_KEY=sua_chave_privada
+   VAPID_SUBJECT=mailto:seu_email@exemplo.com
+   ```
+
+2. **Gerar chaves VAPID**:
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+
+## 📋 API Endpoints
+
+### Eventos
+- `GET /api/eventos`: Listar eventos
+- `POST /api/eventos`: Criar evento
+- `PUT /api/eventos/:id`: Atualizar evento
+- `DELETE /api/eventos/:id`: Excluir evento
+
+### Recados
+- `GET /api/recados`: Listar recados
+- `POST /api/recados`: Criar recado
+- `POST /api/recados/:id/comentarios`: Adicionar comentário
+
+### Usuários
+- `GET /api/usuarios`: Listar usuários (admin)
+- `GET /api/usuarios/:id`: Obter usuário
+- `PATCH /api/usuarios/editar-proprio-perfil`: Editar próprio perfil
+
+### Notificações Push
+- `POST /api/push/subscribe`: Inscrever para notificações
+- `DELETE /api/push/subscribe`: Cancelar inscrição
+- `GET /api/push/test`: Testar envio de notificação (apenas para desenvolvimento)
+
+## 💻 Como Executar
+
+### Pré-requisitos
+- Node.js 18 ou superior
 - PostgreSQL
-- TypeScript
-- NextAuth.js
-- TailwindCSS
 
-## Funcionalidades Principais
-
-- Sistema de eventos públicos e privados
-- Mural de recados
-- Notificações personalizadas
-- Integração com Google Calendar
-- Controle de acesso baseado em hierarquia
-- Sistema de aniversários
-
-## Estrutura do Projeto
-
-O projeto segue uma arquitetura moderna utilizando Next.js App Router, Prisma ORM para acesso ao banco de dados PostgreSQL, e implementa controles de acesso baseados em hierarquia para diferentes tipos de usuários.
-
-Para mais detalhes sobre a modelagem do projeto, consulte o documento [agendajd-modelagem.md](agendajd-modelagem.md).
-
-## Instalação e Execução
-
+### Configuração
 1. Clone o repositório
-```bash
-git clone https://github.com/kevinwfernandes/agendajd.git
-```
+2. Instale as dependências:
+   ```bash
+   npm install
+   ```
+3. Configure o banco de dados no arquivo `.env.local`:
+   ```
+   DATABASE_URL="postgresql://usuario:senha@localhost:5432/agendajd"
+   ```
+4. Configure o NextAuth:
+   ```
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=sua_chave_secreta
+   ```
+5. Configure as chaves VAPID:
+   ```
+   NEXT_PUBLIC_VAPID_PUBLIC_KEY=sua_chave_publica
+   VAPID_PRIVATE_KEY=sua_chave_privada
+   VAPID_SUBJECT=mailto:seu_email@exemplo.com
+   ```
+6. Execute as migrações do Prisma:
+   ```bash
+   npx prisma migrate dev
+   ```
 
-2. Instale as dependências
-```bash
-npm install
-```
-
-3. Configure as variáveis de ambiente criando um arquivo `.env` baseado no `.env.example`
-
-4. Execute as migrações do Prisma
-```bash
-npm run prisma:migrate
-```
-
-5. Inicie o servidor de desenvolvimento
+### Execução em Desenvolvimento
 ```bash
 npm run dev
 ```
 
-## Cronograma de Desenvolvimento
-
-O desenvolvimento está planejado em 7 fases, ao longo de 12 semanas, conforme detalhado no documento de modelagem.
-
-## Licença
-
-Projeto desenvolvido para uso exclusivo da Loja Jacques DeMolay.
-
-## Classes predefinidas
-
-O sistema possui as seguintes classes predefinidas para eventos:
-
-1. **Sessão Maçônica** - Visível apenas para Maçons (admins e membros regulares)
-2. **Reunião DeMolay** - Visível para DeMolays e Maçons (admins ou não)
-3. **Reunião FDJ** - Visível para Filhas de Jó e Maçons (admins ou não)
-4. **Reunião Fraterna** - Visível para Fraternas e Maçons (admins ou não)
-
-Eventos marcados como "públicos" são visíveis para todos os usuários, independentemente de sua classe.
-
-## Scripts do projeto
-
-- `npm run dev` - Inicia o servidor de desenvolvimento
-- `npm run build` - Constrói o projeto para produção (inclui seed das classes e criação do admin)
-- `npm run start` - Inicia o servidor em modo de produção
-- `npm run seed` - Insere as classes predefinidas e o usuário administrador no banco de dados
-- `npm run prisma:migrate` - Executa migrações do Prisma em ambiente de desenvolvimento
-- `npm run prisma:deploy` - Executa migrações do Prisma em ambiente de produção
-- `npm run prisma:studio` - Abre o Prisma Studio para visualizar o banco de dados
-
-## Deploy na Vercel com Banco de Dados Neon (Gratuito)
-
-### 1. Configurar o Banco de Dados Neon
-
-1. Crie uma conta no [Neon](https://neon.tech/)
-2. Crie um novo projeto no Neon
-3. Na tela do projeto, clique em "Connection Details" e copie a string de conexão
-4. A string de conexão será semelhante a `postgres://user:password@ep-xyz-123.us-east-2.aws.neon.tech/neondb`
-
-### 2. Configurar o Projeto na Vercel
-
-1. Faça o fork deste repositório no GitHub
-2. Acesse [Vercel](https://vercel.com/) e crie uma conta (ou faça login)
-3. Clique em "Add New Project" e importe o repositório do GitHub
-4. Na seção de configuração do projeto, adicione as seguintes variáveis de ambiente:
-
-   ```
-   DATABASE_URL=sua_string_de_conexao_neon
-   NEXTAUTH_URL=sua_url_de_producao (ex: https://agendajd.vercel.app)
-   NEXTAUTH_SECRET=gere_um_valor_aleatorio_longo
-   ADMIN_EMAIL=email_do_administrador
-   ADMIN_PASSWORD=senha_do_administrador (será alterada após o primeiro login)
-   ADMIN_NAME=Nome do Administrador Geral
-   VAPID_PUBLIC_KEY=sua_chave_publica_vapid
-   VAPID_PRIVATE_KEY=sua_chave_privada_vapid
-   ```
-
-5. Clique em "Deploy"
-
-### 3. Gerando Chaves VAPID para Notificações
-
-Para gerar as chaves VAPID necessárias para as notificações push, execute este comando antes do deploy:
-
+### Build para Produção
 ```bash
-npx web-push generate-vapid-keys
+npm run build
+npm start
 ```
 
-Copie as chaves pública e privada geradas para as variáveis de ambiente `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY`.
+## 🔍 Depuração
 
-### 4. Primeiro Acesso
+### Página de Debug
+O sistema inclui uma página de debug em `/debug` que permite:
+- Verificar o status do service worker
+- Ver detalhes da configuração de notificações push
+- Testar o envio de notificações
+- Solicitar permissões explicitamente
 
-Após o deploy, o sistema já estará configurado com:
+### Logs
+Os componentes incluem logs detalhados que podem ser visualizados no console do navegador:
+- Service Worker: `console.log('Service Worker instalado com sucesso!')`
+- Componente de Notificações: `console.log('Inscrição salva com sucesso no servidor')`
 
-1. Um usuário administrador com as credenciais definidas nas variáveis de ambiente
-2. As classes predefinidas para os eventos
-3. Todas as configurações necessárias para o funcionamento do sistema
+## 📱 PWA (Progressive Web App)
 
-Para acessar o sistema, use o email e senha definidos nas variáveis `ADMIN_EMAIL` e `ADMIN_PASSWORD`.
+O sistema pode ser instalado como um aplicativo nos dispositivos dos usuários através dos recursos de PWA:
+- Service Worker para funcionamento offline
+- Manifesto para instalação como aplicativo
+- Ícones e splash screens
 
-**Importante:** Altere a senha do administrador após o primeiro login por motivos de segurança.
+## 👨‍💻 Desenvolvimento Contínuo
 
-## Desenvolvimento
-
-Para começar o desenvolvimento:
-
-1. Clone o repositório
-2. Instale as dependências com `npm install`
-3. Configure as variáveis de ambiente no arquivo `.env.local`
-4. Execute `npm run prisma:migrate` para criar o banco de dados
-5. Execute `npm run dev` para iniciar o servidor de desenvolvimento
-
-## Solução de Problemas
-
-### Classes não aparecem no seletor
-
-Execute manualmente:
-```
-npm run seed
-```
-
-### Problemas com o banco de dados
-
-Verifique a conexão com:
-```
-npx prisma db push
-```
-
-Para visualizar o banco de dados:
-```
-npx prisma studio
-```
+Para desenvolvedores trabalhando no projeto:
+- Use `npm run dev` para iniciar o servidor de desenvolvimento
+- Acesse a página `/debug` para testar notificações
+- Utilize o console do navegador para ver os logs detalhados

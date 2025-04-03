@@ -18,6 +18,7 @@ export default function NovoUsuarioPage() {
   const [password, setPassword] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState('MEMBRO_DM');
   const [classeId, setClasseId] = useState<number | undefined>(undefined);
+  const [dataNascimento, setDataNascimento] = useState('');
   const [classes, setClasses] = useState<{ id: number; nome: string }[]>([]);
 
   // Verificar permissão
@@ -66,6 +67,7 @@ export default function NovoUsuarioPage() {
           password,
           tipoUsuario,
           classeId: classeId || null,
+          dataNascimento: dataNascimento || null,
         }),
       });
 
@@ -86,6 +88,7 @@ export default function NovoUsuarioPage() {
       setPassword('');
       setTipoUsuario('MEMBRO_DM');
       setClasseId(undefined);
+      setDataNascimento('');
 
       // Redirecionar após 2 segundos
       setTimeout(() => {
@@ -247,6 +250,22 @@ export default function NovoUsuarioPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+              </div>
+
+              <div className="sm:col-span-3">
+                <label htmlFor="dataNascimento" className="block text-sm font-medium text-gray-700">
+                  Data de Nascimento
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="date"
+                    id="dataNascimento"
+                    name="dataNascimento"
+                    value={dataNascimento}
+                    onChange={(e) => setDataNascimento(e.target.value)}
+                    className="shadow-sm focus:ring-jd-accent focus:border-jd-accent block w-full sm:text-sm border-gray-300 rounded-md"
+                  />
                 </div>
               </div>
             </div>
