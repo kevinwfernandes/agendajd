@@ -29,7 +29,7 @@ model Classe {
   descricao   String?
 
   // Relações
-  usuarios    Usuario[]
+  usuarios    User[]
   eventos     Evento[]
   recados     Recado[]
   
@@ -37,17 +37,65 @@ model Classe {
   updatedAt   DateTime @updatedAt
 }
 
-model Usuario {
-  id             Int            @id @default(autoincrement())
-  nome           String
+// Modelos para o NextAuth
+model Account {
+  id                 String    @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?   @db.Text
+  access_token       String?   @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?   @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Modelo User que serve tanto para NextAuth quanto para nosso aplicativo
+model User {
+  id             String         @id @default(cuid())
+  name           String         // Nome do usuário
   email          String         @unique
-  senha          String
-  tipoUsuario    TipoUsuario
+  emailVerified  DateTime?      // NextAuth: verificação de email
+  image          String?        // NextAuth: url da imagem
+  
+  // Campos específicos do nosso aplicativo
+  tipoUsuario    TipoUsuario?
   dataNascimento DateTime?
   telefone       String?
-  foto           String?
+  passwordHash   String?        // Hash da senha (p/ credentials provider)
   
-  // Relações
+  // Relações NextAuth
+  accounts       Account[]
+  sessions       Session[]
+  
+  // Relações do nosso aplicativo
   classe         Classe?        @relation(fields: [classeId], references: [id])
   classeId       Int?
   
@@ -56,12 +104,14 @@ model Usuario {
   notificacoes   Notificacao[]
   aniversarios   Aniversario[]
   usuarioEventos UsuarioEvento[]
+  pushSubscriptions PushSubscription[]
   
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   
   @@index([classeId])
   @@index([tipoUsuario])
+  @@map("users")
 }
 
 model Evento {
@@ -76,8 +126,8 @@ model Evento {
   classe         Classe?         @relation(fields: [classeId], references: [id])
   classeId       Int?
   
-  autor          Usuario         @relation("EventoAutor", fields: [autorId], references: [id])
-  autorId        Int
+  autor          User            @relation("EventoAutor", fields: [autorId], references: [id])
+  autorId        String
   
   notificacoes   Notificacao[]
   usuarioEventos UsuarioEvento[]
@@ -100,8 +150,8 @@ model Recado {
   classe       Classe?       @relation(fields: [classeId], references: [id])
   classeId     Int?
   
-  autor        Usuario       @relation(fields: [autorId], references: [id])
-  autorId      Int
+  autor        User          @relation(fields: [autorId], references: [id])
+  autorId      String
   
   notificacoes Notificacao[]
   
@@ -121,8 +171,8 @@ model Notificacao {
   lida      Boolean   @default(false)
   
   // Relações
-  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
-  usuarioId Int
+  usuario   User      @relation(fields: [usuarioId], references: [id])
+  usuarioId String
   
   evento    Evento?   @relation(fields: [eventoId], references: [id])
   eventoId  Int?
@@ -143,8 +193,8 @@ model UsuarioEvento {
   confirmado Boolean  @default(false)
   
   // Relações
-  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
-  usuarioId  Int
+  usuario    User     @relation(fields: [usuarioId], references: [id])
+  usuarioId  String
   
   evento     Evento   @relation(fields: [eventoId], references: [id])
   eventoId   Int
@@ -161,11 +211,29 @@ model Aniversario {
   mensagem  String?
   
   // Relações
-  usuario   Usuario   @relation(fields: [usuarioId], references: [id])
-  usuarioId Int
+  usuario   User      @relation(fields: [usuarioId], references: [id])
+  usuarioId String
   
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   
   @@index([data])
+}
+
+// Modelo para gerenciar inscrições de Push Notification
+model PushSubscription {
+  id         Int       @id @default(autoincrement())
+  endpoint   String    @unique
+  p256dh     String
+  auth       String
+  expirationTime DateTime?
+  
+  // Relações
+  usuario    User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuarioId  String
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  @@index([usuarioId])
 } 

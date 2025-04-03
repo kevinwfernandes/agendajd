@@ -1,69 +1,22 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --foreground-rgb: 10, 26, 51;
-  --background-start-rgb: 248, 249, 250;
-  --background-end-rgb: 230, 231, 232;
-  
-  --primary-color: 15, 43, 91;
-  --secondary-color: 230, 231, 232;
-  --accent-color: 212, 175, 55;
-  --cyan-color: 37, 206, 209;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --foreground-rgb: 248, 249, 250;
-    --background-start-rgb: 10, 26, 51;
-    --background-end-rgb: 15, 43, 91;
+    --background: 248 249 250;
+    --foreground: 15 43 91;
   }
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
-}
-
-/* Base styles */
-.h1 {
-  @apply text-3xl font-bold text-jd-primary;
-}
-.h2 {
-  @apply text-2xl font-bold text-jd-primary;
-}
-.h3 {
-  @apply text-xl font-semibold text-jd-primary;
-}
-.link {
-  @apply text-jd-cyan hover:text-jd-cyan-dark transition-colors;
-}
-.button {
-  @apply rounded px-4 py-2 transition-colors;
-}
-
-/* Component styles */
-.btn-primary {
-  @apply bg-jd-primary text-white hover:bg-jd-primary-light shadow-jd;
-}
-.btn-secondary {
-  @apply bg-jd-secondary text-jd-primary hover:bg-jd-secondary-dark shadow-jd;
-}
-.btn-accent {
-  @apply bg-jd-accent text-jd-primary hover:bg-jd-accent-dark shadow-jd;
-}
-.card {
-  @apply rounded-lg p-6 bg-white shadow-jd border border-jd-secondary-dark;
-}
-.nav-link {
-  @apply text-jd-light hover:text-jd-cyan transition-colors;
-}
-.badge {
-  @apply px-2 py-1 text-xs rounded-full;
-}
-.badge-primary {
-  @apply bg-jd-primary text-white;
-}
-.badge-accent {
-  @apply bg-jd-accent text-jd-primary;
-}
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 10 26 51;
+      --foreground: 230 231 232;
+    }
+  }
+  
+  body {
+    color: rgb(var(--foreground));
+    background: rgb(var(--background));
+  }
+} 
