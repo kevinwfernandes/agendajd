@@ -25,53 +25,108 @@ export async function GET(request: NextRequest) {
     // Todos os recados são visíveis para todos os usuários (sem filtro por classe)
     const where = {};
     
-    // Buscar recados
-    const [recados, total] = await Promise.all([
-      prisma.recado.findMany({
-        where,
-        orderBy: { data: 'desc' },
-        skip,
-        take: limit,
-        include: {
-          autor: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              image: true,
-              tipoUsuario: true
+    try {
+      // Tentar buscar recados com contagem de comentários
+      const [recados, total] = await Promise.all([
+        prisma.recado.findMany({
+          where,
+          orderBy: { data: 'desc' },
+          skip,
+          take: limit,
+          include: {
+            autor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                tipoUsuario: true
+              }
+            },
+            classe: {
+              select: {
+                id: true,
+                nome: true
+              }
+            },
+            _count: {
+              select: { comentarios: true }
             }
-          },
-          classe: {
-            select: {
-              id: true,
-              nome: true
-            }
-          },
-          _count: {
-            select: { comentarios: true }
           }
-        }
-      }),
-      prisma.recado.count({ where })
-    ]);
-    
-    // Formatar resposta para incluir contagem de comentários
-    const recadosFormatados = recados.map(recado => {
-      const { _count, ...recadoData } = recado;
-      return {
-        ...recadoData,
-        comentariosCount: _count.comentarios
-      };
-    });
-    
-    return NextResponse.json({
-      recados: recadosFormatados,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
-    });
+        }),
+        prisma.recado.count({ where })
+      ]);
+      
+      // Formatar resposta para incluir contagem de comentários
+      const recadosFormatados = recados.map(recado => {
+        const { _count, ...recadoData } = recado;
+        return {
+          ...recadoData,
+          comentariosCount: _count.comentarios
+        };
+      });
+      
+      return NextResponse.json({
+        recados: recadosFormatados,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      });
+    } catch (error) {
+      // Verificar se o erro é por causa da tabela de comentários não existir
+      if (error instanceof Error && 
+          error.message.includes("The table `public.ComentarioRecado` does not exist")) {
+        console.warn("Tabela ComentarioRecado não existe, buscando recados sem contagem de comentários");
+        
+        // Buscar recados sem contar comentários
+        const [recados, total] = await Promise.all([
+          prisma.recado.findMany({
+            where,
+            orderBy: { data: 'desc' },
+            skip,
+            take: limit,
+            include: {
+              autor: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                  tipoUsuario: true
+                }
+              },
+              classe: {
+                select: {
+                  id: true,
+                  nome: true
+                }
+              }
+            }
+          }),
+          prisma.recado.count({ where })
+        ]);
+        
+        // Adicionar comentariosCount como 0 (já que a tabela não existe)
+        const recadosFormatados = recados.map(recado => {
+          return {
+            ...recado,
+            comentariosCount: 0
+          };
+        });
+        
+        return NextResponse.json({
+          recados: recadosFormatados,
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        });
+      } else {
+        // Outros erros, propagar
+        throw error;
+      }
+    }
   } catch (error) {
     console.error('Erro ao listar recados:', error);
     return NextResponse.json(
@@ -140,6 +195,12 @@ export async function POST(request: NextRequest) {
       }
     });
     
+    // Adicionar comentariosCount = 0 para novo recado
+    const recadoResponse = {
+      ...recado,
+      comentariosCount: 0
+    };
+    
     // Enviar notificações sobre o novo recado
     try {
       await notifyUsersAboutRecado(recado);
@@ -148,7 +209,7 @@ export async function POST(request: NextRequest) {
       // Continuar mesmo com erro nas notificações
     }
     
-    return NextResponse.json(recado, { status: 201 });
+    return NextResponse.json(recadoResponse, { status: 201 });
   } catch (error) {
     console.error('Erro ao criar recado:', error);
     return NextResponse.json(

@@ -48,35 +48,47 @@ export async function GET(
       }
     }
     
-    // Buscar comentários usando SQL direto pois o modelo pode estar inconsistente
-    const comentarios = await prisma.$queryRaw`
-      SELECT 
-        cr."id", cr."texto", cr."data", cr."recadoId", cr."autorId",
-        u."id" as "autor_id", u."name" as "autor_name", u."email" as "autor_email", 
-        u."image" as "autor_image", u."tipoUsuario" as "autor_tipoUsuario"
-      FROM "ComentarioRecado" cr
-      JOIN users u ON cr."autorId" = u."id"
-      WHERE cr."recadoId" = ${recadoId}
-      ORDER BY cr."data" ASC
-    `;
-    
-    // Formatar resultados para manter compatibilidade com o formato esperado
-    const formattedComentarios = Array.isArray(comentarios) ? comentarios.map((c: any) => ({
-      id: c.id,
-      texto: c.texto,
-      data: c.data,
-      recadoId: c.recadoId,
-      autorId: c.autorId,
-      autor: {
-        id: c.autor_id,
-        name: c.autor_name,
-        email: c.autor_email,
-        image: c.autor_image,
-        tipoUsuario: c.autor_tipoUsuario
+    try {
+      // Tentar buscar comentários usando SQL direto
+      const comentarios = await prisma.$queryRaw`
+        SELECT 
+          cr."id", cr."texto", cr."data", cr."recadoId", cr."autorId",
+          u."id" as "autor_id", u."name" as "autor_name", u."email" as "autor_email", 
+          u."image" as "autor_image", u."tipoUsuario" as "autor_tipoUsuario"
+        FROM "ComentarioRecado" cr
+        JOIN users u ON cr."autorId" = u."id"
+        WHERE cr."recadoId" = ${recadoId}
+        ORDER BY cr."data" ASC
+      `;
+      
+      // Formatar resultados para manter compatibilidade com o formato esperado
+      const formattedComentarios = Array.isArray(comentarios) ? comentarios.map((c: any) => ({
+        id: c.id,
+        texto: c.texto,
+        data: c.data,
+        recadoId: c.recadoId,
+        autorId: c.autorId,
+        autor: {
+          id: c.autor_id,
+          name: c.autor_name,
+          email: c.autor_email,
+          image: c.autor_image,
+          tipoUsuario: c.autor_tipoUsuario
+        }
+      })) : [];
+      
+      return NextResponse.json(formattedComentarios);
+    } catch (error) {
+      // Verificar se o erro é por causa da tabela não existir
+      if (error instanceof Error && error.message.includes('does not exist')) {
+        console.warn('Tabela de comentários não existe, retornando array vazio');
+        // Retornar array vazio, como se não houvesse comentários
+        return NextResponse.json([]);
+      } else {
+        // Se for outro tipo de erro, propagar
+        throw error;
       }
-    })) : [];
-    
-    return NextResponse.json(formattedComentarios);
+    }
   } catch (error) {
     console.error('Erro ao listar comentários:', error);
     return NextResponse.json(
@@ -137,56 +149,70 @@ export async function POST(
       return NextResponse.json({ message: 'O texto do comentário é obrigatório' }, { status: 400 });
     }
     
-    // Criar comentário usando SQL direto
-    const now = new Date();
-    const result = await prisma.$executeRaw`
-      INSERT INTO "ComentarioRecado" ("texto", "data", "recadoId", "autorId", "createdAt", "updatedAt")
-      VALUES (${texto}, ${now}, ${recadoId}, ${session.user.id}, ${now}, ${now})
-      RETURNING "id"
-    `;
-    
-    const comentarioId = result ? (Array.isArray(result) && result.length > 0 ? result[0].id : null) : null;
-    
-    // Buscar dados do usuário para retornar com o comentário
-    const usuario = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        tipoUsuario: true
+    try {
+      // Tentar criar comentário usando SQL direto
+      const now = new Date();
+      const result = await prisma.$executeRaw`
+        INSERT INTO "ComentarioRecado" ("texto", "data", "recadoId", "autorId", "createdAt", "updatedAt")
+        VALUES (${texto}, ${now}, ${recadoId}, ${session.user.id}, ${now}, ${now})
+        RETURNING "id"
+      `;
+      
+      const comentarioId = result ? (Array.isArray(result) && result.length > 0 ? result[0].id : null) : null;
+      
+      // Buscar dados do usuário para retornar com o comentário
+      const usuario = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          tipoUsuario: true
+        }
+      });
+      
+      const comentario = {
+        id: comentarioId,
+        texto,
+        data: now,
+        recadoId,
+        autorId: session.user.id,
+        autor: usuario
+      };
+      
+      // Notificar o autor do recado sobre o novo comentário (se não for ele mesmo)
+      if (recado.autorId !== session.user.id) {
+        try {
+          const autorNome = session.user.name || 'Alguém';
+          
+          await prisma.notificacao.create({
+            data: {
+              titulo: 'Novo comentário em seu recado',
+              mensagem: `${autorNome} comentou em seu recado: "${texto.substring(0, 50)}${texto.length > 50 ? '...' : ''}"`,
+              usuarioId: recado.autorId,
+              recadoId
+            }
+          });
+        } catch (err) {
+          console.error('Erro ao criar notificação para autor do recado:', err);
+        }
       }
-    });
-    
-    const comentario = {
-      id: comentarioId,
-      texto,
-      data: now,
-      recadoId,
-      autorId: session.user.id,
-      autor: usuario
-    };
-    
-    // Notificar o autor do recado sobre o novo comentário (se não for ele mesmo)
-    if (recado.autorId !== session.user.id) {
-      try {
-        const autorNome = session.user.name || 'Alguém';
-        
-        await prisma.notificacao.create({
-          data: {
-            titulo: 'Novo comentário em seu recado',
-            mensagem: `${autorNome} comentou em seu recado: "${texto.substring(0, 50)}${texto.length > 50 ? '...' : ''}"`,
-            usuarioId: recado.autorId,
-            recadoId
-          }
-        });
-      } catch (err) {
-        console.error('Erro ao criar notificação para autor do recado:', err);
+      
+      return NextResponse.json(comentario, { status: 201 });
+    } catch (error) {
+      // Verificar se é erro de tabela não existir
+      if (error instanceof Error && error.message.includes('does not exist')) {
+        console.warn('Tabela de comentários não existe, não é possível adicionar comentários');
+        return NextResponse.json(
+          { message: 'Funcionalidade de comentários não está disponível no momento' },
+          { status: 503 } // Service Unavailable
+        );
+      } else {
+        // Se for outro tipo de erro, propagar
+        throw error;
       }
     }
-    
-    return NextResponse.json(comentario, { status: 201 });
   } catch (error) {
     console.error('Erro ao adicionar comentário:', error);
     return NextResponse.json(
