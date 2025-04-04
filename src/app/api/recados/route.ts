@@ -22,21 +22,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const skip = (page - 1) * limit;
     
-    // Verificar tipo de usuário e filtrar recados de acordo
-    const isAdmin = isUserAdmin(session.user.tipoUsuario);
-    const userClasseId = session.user.classeId as number | null;
-    
-    // Filtrar recados:
-    // - Se for admin, ver todos os recados
-    // - Se não for admin, ver recados globais e da sua classe
-    const where = isAdmin 
-      ? {} 
-      : {
-          OR: [
-            { global: true },
-            { classeId: userClasseId }
-          ]
-        };
+    // Todos os recados são visíveis para todos os usuários (sem filtro por classe)
+    const where = {};
     
     // Buscar recados
     const [recados, total] = await Promise.all([

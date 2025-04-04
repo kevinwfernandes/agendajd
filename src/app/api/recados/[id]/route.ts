@@ -48,17 +48,7 @@ export async function GET(
       return NextResponse.json({ message: 'Recado não encontrado' }, { status: 404 });
     }
     
-    // Verificar permissões (usuário pode ver recados globais, da sua classe ou se for admin)
-    const userTipo = session.user.tipoUsuario as TipoUsuario;
-    const isAdmin = isUserAdmin(userTipo);
-    const userClasseId = session.user.classeId as number | null;
-    
-    // Se o recado for global, qualquer usuário pode vê-lo
-    // Se não for global, verificar se o usuário é admin ou pertence à classe do recado
-    if (!recado.global && !isAdmin && recado.classeId !== userClasseId) {
-      return NextResponse.json({ message: 'Acesso negado' }, { status: 403 });
-    }
-    
+    // Todos os recados são visíveis para todos os usuários
     return NextResponse.json(recado);
   } catch (error) {
     console.error('Erro ao buscar recado:', error);
@@ -115,7 +105,11 @@ export async function PUT(
     }
     
     // Se não for admin, não pode alterar a classe ou flag global
-    const updateData: any = { texto };
+    const updateData: { 
+      texto: string; 
+      global?: boolean; 
+      classeId?: number | null 
+    } = { texto };
     
     if (isAdmin) {
       if (global !== undefined) updateData.global = global;

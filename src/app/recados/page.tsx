@@ -49,9 +49,6 @@ export default function RecadosPage() {
   const [recados, setRecados] = useState<Recado[]>([]);
   const [loading, setLoading] = useState(true);
   const [novoRecadoTexto, setNovoRecadoTexto] = useState('');
-  const [novoRecadoGlobal, setNovoRecadoGlobal] = useState(false);
-  const [novoRecadoClasse, setNovoRecadoClasse] = useState<number | null>(null);
-  const [classes, setClasses] = useState<Classe[]>([]);
   const [enviandoRecado, setEnviandoRecado] = useState(false);
   const [mensagem, setMensagem] = useState<{ texto: string; tipo: 'success' | 'error' } | null>(null);
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -69,7 +66,6 @@ export default function RecadosPage() {
   useEffect(() => {
     if (status === 'authenticated') {
       fetchRecados();
-      fetchClasses();
     }
   }, [status, paginaAtual]);
   
@@ -105,21 +101,6 @@ export default function RecadosPage() {
     }
   };
   
-  const fetchClasses = async () => {
-    try {
-      const response = await fetch('/api/classes');
-      
-      if (!response.ok) {
-        throw new Error('Falha ao carregar classes');
-      }
-      
-      const data = await response.json();
-      setClasses(data);
-    } catch (error) {
-      console.error('Erro ao carregar classes:', error);
-    }
-  };
-  
   const handleSubmitRecado = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -142,8 +123,7 @@ export default function RecadosPage() {
         },
         body: JSON.stringify({
           texto: novoRecadoTexto,
-          global: novoRecadoGlobal,
-          classeId: novoRecadoClasse
+          global: true // Todos os recados são globais (visíveis para todos)
         }),
       });
       
@@ -167,8 +147,6 @@ export default function RecadosPage() {
       
       // Limpar formulário
       setNovoRecadoTexto('');
-      setNovoRecadoGlobal(false);
-      setNovoRecadoClasse(null);
       
       setMensagem({
         texto: 'Recado publicado com sucesso!',
@@ -335,6 +313,76 @@ export default function RecadosPage() {
     return adminTypes.includes(session.user.tipoUsuario as string);
   };
   
+  // Adicionar função para excluir recado
+  const excluirRecado = async (recadoId: number) => {
+    if (!confirm('Tem certeza que deseja excluir este recado? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/recados/${recadoId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao excluir recado');
+      }
+      
+      // Remover recado da lista
+      setRecados(recados.filter(r => r.id !== recadoId));
+      
+      setMensagem({
+        texto: 'Recado excluído com sucesso!',
+        tipo: 'success'
+      });
+      
+      // Limpar mensagem após 3 segundos
+      setTimeout(() => {
+        setMensagem(null);
+      }, 3000);
+    } catch (error) {
+      console.error('Erro ao excluir recado:', error);
+      setMensagem({
+        texto: 'Erro ao excluir recado. Tente novamente.',
+        tipo: 'error'
+      });
+    }
+  };
+  
+  // Adicionar função para excluir comentário
+  const excluirComentario = async (recadoId: number, comentarioId: number) => {
+    if (!confirm('Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/recados/${recadoId}/comentarios/${comentarioId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Erro ao excluir comentário');
+      }
+      
+      // Atualizar recado na lista removendo o comentário
+      setRecados(prevRecados => {
+        return prevRecados.map(recado => {
+          if (recado.id === recadoId && recado.comentarios) {
+            return {
+              ...recado,
+              comentarios: recado.comentarios.filter(c => c.id !== comentarioId)
+            };
+          }
+          return recado;
+        });
+      });
+      
+    } catch (error) {
+      console.error('Erro ao excluir comentário:', error);
+      alert('Erro ao excluir comentário. Tente novamente.');
+    }
+  };
+  
   if (status === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -368,33 +416,10 @@ export default function RecadosPage() {
             
             <div className="flex flex-col md:flex-row gap-4 mb-4">
               <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="global"
-                  checked={novoRecadoGlobal}
-                  onChange={(e) => setNovoRecadoGlobal(e.target.checked)}
-                  className="mr-2 h-4 w-4 text-jd-primary focus:ring-jd-primary border-gray-300 rounded"
-                />
-                <label htmlFor="global" className="text-sm text-gray-700">
-                  Recado público (visível para todos)
-                </label>
+                <p className="text-sm text-gray-700">
+                  Todos os recados publicados são visíveis para todos os membros.
+                </p>
               </div>
-              
-              {!novoRecadoGlobal && (
-                <div className="flex-1">
-                  <select
-                    value={novoRecadoClasse || ''}
-                    onChange={(e) => setNovoRecadoClasse(e.target.value ? Number(e.target.value) : null)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-jd-primary"
-                    required={!novoRecadoGlobal}
-                  >
-                    <option value="">Selecione uma classe</option>
-                    {classes.map(classe => (
-                      <option key={classe.id} value={classe.id}>{classe.nome}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
             </div>
             
             {mensagem && (
@@ -451,16 +476,17 @@ export default function RecadosPage() {
                             <p className="text-xs text-gray-500">{formattedDate}</p>
                           </div>
                           
-                          {recado.classe && (
-                            <span className="bg-jd-secondary-light text-jd-primary text-xs px-2 py-1 rounded">
-                              {recado.classe.nome}
-                            </span>
-                          )}
-                          
-                          {recado.global && (
-                            <span className="bg-jd-primary text-white text-xs px-2 py-1 rounded">
-                              Público
-                            </span>
+                          {/* Botão de excluir recado */}
+                          {(session?.user?.id === recado.autorId || ['MACOM_ADMIN_GERAL', 'ADMIN_DM', 'ADMIN_FDJ', 'ADMIN_FRATERNA'].includes(session?.user?.tipoUsuario as string)) && (
+                            <button 
+                              onClick={() => excluirRecado(recado.id)}
+                              className="text-red-500 hover:text-red-700 text-xs"
+                              title="Excluir recado"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
                           )}
                         </div>
                         
@@ -490,6 +516,11 @@ export default function RecadosPage() {
                                     { locale: ptBR }
                                   );
                                   
+                                  const podeExcluirComentario = 
+                                    session?.user?.id === comentario.autorId || // Autor do comentário
+                                    session?.user?.id === recado.autorId || // Autor do recado
+                                    ['MACOM_ADMIN_GERAL', 'ADMIN_DM', 'ADMIN_FDJ', 'ADMIN_FRATERNA'].includes(session?.user?.tipoUsuario as string); // Admin
+                                  
                                   return (
                                     <div key={comentario.id} className="pb-2 border-b border-gray-200 last:border-0">
                                       <div className="flex justify-between items-start">
@@ -499,7 +530,22 @@ export default function RecadosPage() {
                                             ({formatarTipoUsuario(comentario.autor?.tipoUsuario)})
                                           </span>
                                         </p>
-                                        <p className="text-xs text-gray-500">{formattedCommentDate}</p>
+                                        <div className="flex items-center">
+                                          <p className="text-xs text-gray-500 mr-2">{formattedCommentDate}</p>
+                                          
+                                          {/* Botão de excluir comentário */}
+                                          {podeExcluirComentario && (
+                                            <button 
+                                              onClick={() => excluirComentario(recado.id, comentario.id)}
+                                              className="text-red-500 hover:text-red-700 text-xs"
+                                              title="Excluir comentário"
+                                            >
+                                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                              </svg>
+                                            </button>
+                                          )}
+                                        </div>
                                       </div>
                                       <p className="text-sm text-gray-700 mt-1">{comentario.texto}</p>
                                     </div>
