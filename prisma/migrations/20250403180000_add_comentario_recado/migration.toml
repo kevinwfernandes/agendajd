@@ -1,0 +1,6 @@
+# This is an auto-generated file based on the Prisma Schema creation timestamp.
+# Do not modify this file manually.
+# For more information, please consult: https://pris.ly/d/api
+
+migration_id = "20250403180000_add_comentario_recado"
+checksum = "c4e17b6bf67fa129eb79bd92a480c8a9a11bb36cd8bce62e9b0a89dd7bf6d9fa" 
