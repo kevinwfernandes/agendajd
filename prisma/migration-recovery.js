@@ -33,31 +33,47 @@ async function fixDatabaseManually() {
     console.log('Conectando ao banco de dados...');
     await prisma.$connect();
     
-    console.log('Verificando status da migração...');
-    
-    // Verificar se já existe uma entrada de migração com falha
-    const failedMigration = await prisma.$queryRaw`
-      SELECT * FROM _prisma_migrations 
-      WHERE migration_name = '20250403180000_add_comentario_recado' 
-      AND applied_steps_count < finished_at IS NULL
+    console.log('Verificando se a tabela _prisma_migrations existe...');
+    const migrationsTableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = '_prisma_migrations'
+      );
     `;
     
-    console.log('Status da verificação:', failedMigration);
-    
-    // Marcar a migração como revertida (se existir como falha)
-    if (Array.isArray(failedMigration) && failedMigration.length > 0) {
-      console.log('Encontrada migração com falha, tentando marcar como aplicada...');
+    if (Array.isArray(migrationsTableExists) && 
+        migrationsTableExists.length > 0 && 
+        migrationsTableExists[0].exists) {
       
-      // Marcar a migração como aplicada
-      await prisma.$executeRaw`
-        UPDATE _prisma_migrations
-        SET finished_at = NOW(), 
-            applied_steps_count = 1, 
-            logs = 'Manually marked as applied during recovery'
-        WHERE migration_name = '20250403180000_add_comentario_recado'
+      console.log('Verificando status da migração...');
+      
+      // Verificar se já existe uma entrada de migração com falha
+      const failedMigration = await prisma.$queryRaw`
+        SELECT * FROM _prisma_migrations 
+        WHERE migration_name = '20250403180000_add_comentario_recado' 
+        AND finished_at IS NULL
       `;
       
-      console.log('Migração marcada como aplicada no registro de migrações.');
+      console.log('Status da verificação:', failedMigration);
+      
+      // Marcar a migração como revertida (se existir como falha)
+      if (Array.isArray(failedMigration) && failedMigration.length > 0) {
+        console.log('Encontrada migração com falha, tentando marcar como aplicada...');
+        
+        // Marcar a migração como aplicada
+        await prisma.$executeRaw`
+          UPDATE _prisma_migrations
+          SET finished_at = NOW(), 
+              applied_steps_count = 1, 
+              logs = 'Manually marked as applied during recovery'
+          WHERE migration_name = '20250403180000_add_comentario_recado'
+        `;
+        
+        console.log('Migração marcada como aplicada no registro de migrações.');
+      }
+    } else {
+      console.log('Tabela _prisma_migrations não existe, pulando verificações de migração.');
     }
     
     // Verificar se a tabela já existe
@@ -126,36 +142,41 @@ async function fixDatabaseManually() {
       console.log('Tabela ComentarioRecado criada com sucesso!');
     }
     
-    // Inserir o registro de migração se não existir
-    const migrationExists = await prisma.$queryRaw`
-      SELECT EXISTS (
-        SELECT FROM _prisma_migrations 
-        WHERE migration_name = '20250403180000_add_comentario_recado'
-      );
-    `;
-    
-    const migrationRecordExists = Array.isArray(migrationExists) && 
-                               migrationExists.length > 0 && 
-                               migrationExists[0].exists;
-    
-    if (!migrationRecordExists) {
-      console.log('Inserindo registro de migração...');
-      await prisma.$executeRaw`
-        INSERT INTO _prisma_migrations (
-          migration_name, 
-          started_at, 
-          applied_steps_count, 
-          finished_at, 
-          logs
-        ) VALUES (
-          '20250403180000_add_comentario_recado',
-          NOW(),
-          1,
-          NOW(),
-          'Manually applied during recovery'
+    // Inserir o registro de migração se não existir e a tabela existir
+    if (Array.isArray(migrationsTableExists) && 
+        migrationsTableExists.length > 0 && 
+        migrationsTableExists[0].exists) {
+      
+      const migrationExists = await prisma.$queryRaw`
+        SELECT EXISTS (
+          SELECT FROM _prisma_migrations 
+          WHERE migration_name = '20250403180000_add_comentario_recado'
         );
       `;
-      console.log('Registro de migração inserido com sucesso!');
+      
+      const migrationRecordExists = Array.isArray(migrationExists) && 
+                                 migrationExists.length > 0 && 
+                                 migrationExists[0].exists;
+      
+      if (!migrationRecordExists) {
+        console.log('Inserindo registro de migração...');
+        await prisma.$executeRaw`
+          INSERT INTO _prisma_migrations (
+            migration_name, 
+            started_at, 
+            applied_steps_count, 
+            finished_at, 
+            logs
+          ) VALUES (
+            '20250403180000_add_comentario_recado',
+            NOW(),
+            1,
+            NOW(),
+            'Manually applied during recovery'
+          );
+        `;
+        console.log('Registro de migração inserido com sucesso!');
+      }
     }
     
     console.log('Processo de recuperação do banco de dados concluído com sucesso!');
