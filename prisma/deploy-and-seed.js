@@ -22,7 +22,21 @@ if (!fs.existsSync(migrationsPath)) {
 try {
   // Executar as migrações
   console.log('\n=== EXECUTANDO MIGRAÇÕES ===');
-  execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+  
+  try {
+    // Primeiro tentar executar normalmente
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+  } catch (migrationError) {
+    console.log('\n=== ERRO NA MIGRAÇÃO, TENTANDO RECUPERAÇÃO ===');
+    
+    // Tentar recuperar de uma migração falha
+    console.log('Executando script de recuperação...');
+    execSync('node prisma/migration-recovery.js', { stdio: 'inherit' });
+    
+    // Tentar novamente as migrações
+    console.log('\n=== TENTANDO MIGRAÇÕES NOVAMENTE APÓS RECUPERAÇÃO ===');
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+  }
   
   // Executar o seed
   console.log('\n=== EXECUTANDO SEED ===');
