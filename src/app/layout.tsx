@@ -19,6 +19,21 @@ export const metadata: Metadata = {
   title: "AgendaJD - Loja Jacques de Molay",
   description: "Flanelógrafo digital e sistema de agenda para a Loja Jacques de Molay",
   manifest: "/manifest.json",
+  themeColor: "#0F2B5B",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AgendaJD"
+  },
+  icons: {
+    icon: [
+      { url: "/logojd.jpeg", sizes: "32x32" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192" }
+    ],
+    apple: [
+      { url: "/icons/icon-192x192.png" }
+    ]
+  }
 };
 
 export default function RootLayout({
@@ -29,7 +44,14 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/logojd.jpeg" sizes="any" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="AgendaJD" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#0F2B5B" />
+        <meta name="application-name" content="AgendaJD" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>

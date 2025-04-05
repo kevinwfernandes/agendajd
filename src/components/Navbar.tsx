@@ -30,6 +30,7 @@ export default function Navbar() {
     { href: '/admin/usuarios', label: 'Usuários' },
     { href: '/admin/classes', label: 'Classes' },
     { href: '/admin/notificacoes', label: 'Notificações' },
+    { href: '/admin/gerar-icones', label: 'Ícones PWA' },
   ];
 
   return (
