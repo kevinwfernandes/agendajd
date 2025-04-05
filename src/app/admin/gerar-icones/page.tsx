@@ -1,211 +1,195 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
-import Navbar from '@/components/Navbar';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-
-const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+import { redirect } from 'next/navigation';
+import Image from 'next/image';
 
 export default function GerarIconesPage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [gerados, setGerados] = useState<{ size: number, url: string }[]>([]);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [logoSrc, setLogoSrc] = useState('/logojd.jpeg');
+  const [icons, setIcons] = useState<{ size: number; dataUrl: string }[]>([]);
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { data: session, status } = useSession();
 
-  // Verificar autenticação
+  // Array de tamanhos de ícones para PWA
+  const iconSizes = [32, 72, 96, 128, 144, 152, 192, 384, 512];
+
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login');
-    } else if (status === 'authenticated' && !isAdmin()) {
-      router.push('/');
-    }
-  }, [status, router]);
-
-  const isAdmin = () => {
-    if (!session || !session.user) return false;
+    if (status === 'loading') return;
     
-    const adminTypes = ['MACOM_ADMIN_GERAL', 'ADMIN_DM', 'ADMIN_FDJ', 'ADMIN_FRATERNA'];
-    return adminTypes.includes(session.user.tipoUsuario as string);
-  };
+    if (!session) {
+      redirect('/login');
+    }
+    
+    const isAdmin = session?.user?.tipoUsuario && [
+      'MACOM_ADMIN_GERAL',
+      'ADMIN_DM',
+      'ADMIN_FDJ',
+      'ADMIN_FRATERNA'
+    ].includes(session.user.tipoUsuario as string);
+    
+    if (!isAdmin) {
+      redirect('/acesso-negado');
+    }
+  }, [session, status]);
 
-  const generateIcons = async () => {
-    if (!canvasRef.current) return;
+  const generateIcons = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!logoSrc) return;
     
     setIsLoading(true);
-    setGerados([]);
-    
-    try {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      
-      img.onload = () => {
-        const newGerados: { size: number, url: string }[] = [];
+    const image = new Image();
+    image.onload = () => {
+      const generatedIcons = iconSizes.map(size => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
         
-        for (const size of sizes) {
-          const canvas = canvasRef.current;
-          if (!canvas) continue;
-          
-          const ctx = canvas.getContext('2d');
-          if (!ctx) continue;
-          
-          // Configurar tamanho do canvas
-          canvas.width = size;
-          canvas.height = size;
-          
-          // Limpar o canvas
-          ctx.fillStyle = '#FFFFFF';
-          ctx.fillRect(0, 0, size, size);
-          
-          // Calcular proporções para manter a relação de aspecto
-          const aspectRatio = img.width / img.height;
-          let drawWidth, drawHeight, drawX, drawY;
+        if (ctx) {
+          // Calcular proporção para manter o aspecto da imagem
+          const aspectRatio = image.width / image.height;
+          let drawWidth, drawHeight, offsetX = 0, offsetY = 0;
           
           if (aspectRatio > 1) {
             // Imagem mais larga que alta
-            drawWidth = size;
-            drawHeight = size / aspectRatio;
-            drawX = 0;
-            drawY = (size - drawHeight) / 2;
-          } else {
-            // Imagem mais alta que larga
             drawHeight = size;
             drawWidth = size * aspectRatio;
-            drawX = (size - drawWidth) / 2;
-            drawY = 0;
+            offsetX = -(drawWidth - size) / 2;
+          } else {
+            // Imagem mais alta que larga
+            drawWidth = size;
+            drawHeight = size / aspectRatio;
+            offsetY = -(drawHeight - size) / 2;
           }
           
-          // Desenhar a imagem no canvas
-          ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+          // Preencher com fundo branco (opcional)
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, size, size);
           
-          // Converter para URL de dados
-          const dataUrl = canvas.toDataURL('image/png');
-          newGerados.push({ size, url: dataUrl });
+          // Desenhar a imagem redimensionada
+          ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
         }
         
-        setGerados(newGerados);
-        setIsLoading(false);
-      };
+        return {
+          size,
+          dataUrl: canvas.toDataURL('image/png')
+        };
+      });
       
-      img.onerror = () => {
-        console.error('Erro ao carregar a imagem');
-        setIsLoading(false);
-      };
-      
-      img.src = logoSrc;
-    } catch (error) {
-      console.error('Erro ao gerar ícones:', error);
+      setIcons(generatedIcons);
       setIsLoading(false);
+    };
+    
+    image.onerror = () => {
+      alert('Erro ao carregar a imagem. Verifique se o arquivo é válido.');
+      setIsLoading(false);
+    };
+    
+    image.src = logoSrc;
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setLogoSrc(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || !files[0]) return;
-    
-    const file = files[0];
-    const reader = new FileReader();
-    
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        setLogoSrc(event.target.result as string);
-      }
-    };
-    
-    reader.readAsDataURL(file);
-  };
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-jd-primary"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-jd-light flex flex-col">
-      <Navbar />
+    <div className="container mx-auto py-8 px-4">
+      <h1 className="text-2xl font-bold mb-6">Gerar Ícones para PWA</h1>
       
-      <div className="flex-1 max-w-7xl mx-auto px-4 py-6">
-        <h1 className="text-2xl font-bold text-jd-primary mb-6">Gerar Ícones para PWA</h1>
-        
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-medium mb-4">Selecione o logo</h2>
-          
-          <div className="mb-4">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <form onSubmit={generateIcons} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Selecione o logo (de preferência quadrado)
+            </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="border p-2 rounded-md w-full"
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-jd-primary file:text-white
+                hover:file:bg-jd-primary-dark"
             />
           </div>
           
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-2">Pré-visualização</h3>
-            <div className="border rounded-md p-4 flex justify-center">
-              {logoSrc && (
-                <img
-                  src={logoSrc}
-                  alt="Logo"
-                  className="max-h-40 object-contain"
+          {logoSrc && (
+            <div className="mt-4">
+              <p className="text-sm font-medium text-gray-700 mb-2">Prévia:</p>
+              <div className="border border-gray-300 rounded-lg p-4 inline-block">
+                <img 
+                  src={logoSrc} 
+                  alt="Prévia do logo" 
+                  className="max-w-[200px] max-h-[200px]"
                 />
-              )}
+              </div>
             </div>
-          </div>
+          )}
           
           <button
-            onClick={generateIcons}
-            disabled={isLoading}
-            className={`px-4 py-2 bg-jd-primary text-white rounded-md ${
-              isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-jd-primary-dark'
-            } transition-colors`}
+            type="submit"
+            disabled={!logoSrc || isLoading}
+            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white 
+              ${!logoSrc || isLoading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-jd-primary hover:bg-jd-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-jd-primary'
+              }`}
           >
-            {isLoading ? 'Gerando...' : 'Gerar Ícones'}
+            {isLoading ? 'Gerando ícones...' : 'Gerar ícones'}
           </button>
-        </div>
-        
-        {gerados.length > 0 && (
-          <div className="bg-white shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-medium mb-4">Ícones Gerados</h2>
-            <p className="mb-4 text-gray-600">
-              Clique nos ícones para baixá-los. Em seguida, adicione-os à pasta <code>/public/icons/</code> do seu projeto.
-            </p>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {gerados.map(({ size, url }) => (
-                <div key={size} className="flex flex-col items-center">
-                  <a 
-                    href={url} 
-                    download={`icon-${size}x${size}.png`}
-                    className="border rounded-md p-2 hover:bg-gray-50 transition-colors"
-                  >
-                    <img src={url} alt={`Icon ${size}x${size}`} className="w-16 h-16 object-contain" />
-                  </a>
-                  <span className="text-sm mt-1">{size}x{size}</span>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-6 border-t pt-4">
-              <h3 className="text-lg font-medium mb-2">Como usar:</h3>
-              <ol className="list-decimal pl-6 space-y-2 text-gray-700">
-                <li>Baixe todos os ícones clicando em cada um.</li>
-                <li>Coloque os ícones na pasta <code>/public/icons/</code> do seu projeto.</li>
-                <li>Verifique se o <code>manifest.json</code> está configurado corretamente.</li>
-                <li>Reinicie seu servidor Next.js.</li>
-              </ol>
-            </div>
-          </div>
-        )}
+        </form>
       </div>
       
-      {/* Canvas escondido usado para renderização */}
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      {icons.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4">Ícones gerados</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Faça o download de cada ícone e coloque na pasta <code className="bg-gray-100 px-1 py-0.5 rounded">public/icons/</code> do seu projeto.
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {icons.map((icon) => (
+              <div key={icon.size} className="border rounded-lg p-4 flex flex-col items-center">
+                <img 
+                  src={icon.dataUrl} 
+                  alt={`Ícone ${icon.size}x${icon.size}`} 
+                  className="mb-2 border border-gray-200"
+                  style={{ width: `${Math.min(icon.size, 100)}px`, height: `${Math.min(icon.size, 100)}px` }}
+                />
+                <span className="text-sm text-gray-700 mb-2">{icon.size}x{icon.size}</span>
+                <a
+                  href={icon.dataUrl}
+                  download={`icon-${icon.size}x${icon.size}.png`}
+                  className="text-xs bg-jd-primary hover:bg-jd-primary-dark text-white py-1 px-2 rounded"
+                >
+                  Download
+                </a>
+              </div>
+            ))}
+          </div>
+          
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2">Como usar:</h3>
+            <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+              <li>Faça o download de todos os ícones acima</li>
+              <li>Coloque-os na pasta <code className="bg-gray-100 px-1 py-0.5 rounded">public/icons/</code> do seu projeto</li>
+              <li>Verifique se o arquivo <code className="bg-gray-100 px-1 py-0.5 rounded">manifest.json</code> está configurado corretamente</li>
+              <li>Verifique se o <code className="bg-gray-100 px-1 py-0.5 rounded">layout.tsx</code> inclui as tags de favicon e ícones apropriadas</li>
+            </ol>
+          </div>
+        </div>
+      )}
     </div>
   );
-} 
+}

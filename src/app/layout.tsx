@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/logojd.jpeg", sizes: "32x32" },
+      { url: "/icons/icon-32x32.png", sizes: "32x32" },
       { url: "/icons/icon-192x192.png", sizes: "192x192" }
     ],
     apple: [
@@ -44,7 +44,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <head>
-        <link rel="icon" href="/logojd.jpeg" sizes="any" />
+        <link rel="icon" href="/icons/icon-32x32.png" sizes="32x32" />
+        <link rel="icon" href="/icons/icon-192x192.png" sizes="192x192" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
