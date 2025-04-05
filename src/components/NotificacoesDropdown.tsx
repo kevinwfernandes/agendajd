@@ -134,8 +134,9 @@ export function NotificacoesDropdown() {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className="relative p-2 text-gray-600 hover:text-jd-primary focus:outline-none"
+        className="relative p-2 text-jd-secondary-light hover:text-jd-accent focus:outline-none"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Notificações"
       >
         <BellIcon className="h-6 w-6" />
         {naoLidas > 0 && (

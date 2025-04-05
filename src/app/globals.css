@@ -19,4 +19,49 @@
     color: rgb(var(--foreground));
     background: rgb(var(--background));
   }
+}
+
+/* Melhorias para formulários em dispositivos móveis */
+@layer utilities {
+  /* Inputs com melhor contraste e legibilidade */
+  input, textarea, select {
+    @apply text-gray-800 placeholder-gray-500 font-medium;
+  }
+  
+  /* Ajuste de contraste para dark mode */
+  @media (prefers-color-scheme: dark) {
+    input, textarea, select {
+      @apply bg-gray-800 text-white border-gray-700 placeholder-gray-400;
+    }
+  }
+  
+  /* Corrigir fontes muito claras em dispositivos móveis */
+  @media screen and (max-width: 767px) {
+    input, textarea, select, button, .form-text {
+      @apply text-gray-800 font-medium;
+    }
+    
+    input::placeholder, textarea::placeholder {
+      @apply text-gray-600 font-medium;
+    }
+    
+    label, .form-label {
+      @apply text-gray-800 font-bold;
+    }
+    
+    /* Ajustes para telas menores em dark mode */
+    @media (prefers-color-scheme: dark) {
+      input, textarea, select, button, .form-text {
+        @apply text-white font-medium;
+      }
+      
+      input::placeholder, textarea::placeholder {
+        @apply text-gray-300 font-medium;
+      }
+      
+      label, .form-label {
+        @apply text-white font-bold;
+      }
+    }
+  }
 } 

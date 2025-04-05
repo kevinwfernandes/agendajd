@@ -16,9 +16,9 @@ const usuarioPodeVerClasse = (tipoUsuario: string | undefined, nomeClasse: strin
   if (nomeClasse === "Sessão Maçônica") {
     return [
       'MACOM_ADMIN_GERAL',
-      'ADMIN_DM',
-      'ADMIN_FDJ',
-      'ADMIN_FRATERNA',
+     // 'ADMIN_DM',
+     // 'ADMIN_FDJ',
+     // 'ADMIN_FRATERNA',
       'MACOM'
     ].includes(tipoUsuario);
   }
@@ -28,8 +28,8 @@ const usuarioPodeVerClasse = (tipoUsuario: string | undefined, nomeClasse: strin
     return [
       'MACOM_ADMIN_GERAL',
       'ADMIN_DM',
-      'ADMIN_FDJ',
-      'ADMIN_FRATERNA',
+     // 'ADMIN_FDJ',
+     // 'ADMIN_FRATERNA',
       'MACOM',
       'MEMBRO_DM'
     ].includes(tipoUsuario);
@@ -39,9 +39,9 @@ const usuarioPodeVerClasse = (tipoUsuario: string | undefined, nomeClasse: strin
   if (nomeClasse === "Reunião FDJ") {
     return [
       'MACOM_ADMIN_GERAL',
-      'ADMIN_DM',
+     // 'ADMIN_DM',
       'ADMIN_FDJ',
-      'ADMIN_FRATERNA',
+     // 'ADMIN_FRATERNA',
       'MACOM',
       'MEMBRO_FDJ'
     ].includes(tipoUsuario);
@@ -51,8 +51,8 @@ const usuarioPodeVerClasse = (tipoUsuario: string | undefined, nomeClasse: strin
   if (nomeClasse === "Reunião Fraterna") {
     return [
       'MACOM_ADMIN_GERAL',
-      'ADMIN_DM',
-      'ADMIN_FDJ',
+     // 'ADMIN_DM',
+    //  'ADMIN_FDJ',
       'ADMIN_FRATERNA',
       'MACOM',
       'MEMBRO_FRATERNA'
