@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { hash } from 'bcrypt';
+import { hash } from 'bcryptjs';
 import { authOptions, isUserAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { upsertAniversario } from '@/lib/aniversario';
